@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Módulo 2 · Actividad · ¿Por qué no se reportó?</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-height: 100vh; padding: 24px; }
+
+  .header {
+    background: linear-gradient(135deg, #1B2A4A 0%, #2C4A7A 100%);
+    color: white; border-radius: 16px; padding: 28px 32px; margin-bottom: 24px;
+  }
+  .header-label { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #4DB8A4; margin-bottom: 8px; }
+  .header h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+  .header p { font-size: 13px; color: #a0b4cc; line-height: 1.6; max-width: 600px; }
+
+  .instructions {
+    background: white; border-radius: 12px; padding: 16px 20px; margin-bottom: 24px;
+    border-left: 4px solid #4DB8A4; font-size: 13px; color: #444; line-height: 1.6;
+  }
+
+  /* PROGRESS */
+  .progress-bar {
+    background: white; border-radius: 12px; padding: 14px 24px; margin-bottom: 20px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .progress-dots { display: flex; gap: 8px; }
+  .dot {
+    width: 32px; height: 32px; border-radius: 50%; background: #e0e8f0; color: #888;
+    font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+    transition: all 0.3s;
+  }
+  .dot.current { background: #1B2A4A; color: white; transform: scale(1.1); }
+  .dot.done { background: #4DB8A4; color: white; }
+  .dot.wrong { background: #e57373; color: white; }
+  .progress-label { font-size: 13px; color: #666; margin-left: auto; }
+
+  /* SITUATION CARD */
+  .situation-card {
+    background: white; border-radius: 16px; padding: 28px;
+    margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+  .situation-num { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #4DB8A4; margin-bottom: 10px; }
+
+  .scene-box {
+    background: #f7f9fc; border-radius: 12px; padding: 20px 24px; margin-bottom: 24px;
+    border-left: 4px solid #1B2A4A;
+  }
+  .scene-label { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #888; margin-bottom: 10px; }
+  .scene-text { font-size: 14px; color: #1B2A4A; line-height: 1.8; }
+  .scene-detail { font-size: 12px; color: #666; font-style: italic; margin-top: 10px; line-height: 1.6; }
+
+  /* PART 1 — BARRIER */
+  .question-block { margin-bottom: 24px; }
+  .question-label {
+    font-size: 13px; font-weight: 700; color: #1B2A4A; margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .q-num {
+    width: 24px; height: 24px; border-radius: 50%; background: #1B2A4A; color: white;
+    font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+
+  .barrier-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .barrier-btn {
+    background: white; border: 2px solid #e0e8f0; border-radius: 10px;
+    padding: 12px 16px; font-size: 12px; color: #1B2A4A; font-weight: 600;
+    cursor: pointer; text-align: left; transition: all 0.2s;
+    font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.4;
+    display: flex; gap: 10px; align-items: flex-start;
+  }
+  .barrier-btn:hover:not(:disabled) { border-color: #4DB8A4; background: #eaf9f5; }
+  .barrier-btn .barrier-icon { font-size: 18px; flex-shrink: 0; }
+  .barrier-btn.selected-correct { border-color: #2e7d32; background: #e8f5e9; pointer-events: none; }
+  .barrier-btn.selected-wrong { border-color: #c62828; background: #ffebee; pointer-events: none; animation: shake 0.35s ease; }
+  .barrier-btn.revealed { border-color: #2e7d32; background: #f1f8f1; pointer-events: none; }
+  .barrier-btn:disabled { opacity: 0.45; pointer-events: none; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
+
+  /* PART 2 — WHAT WOULD YOU DO */
+  .action-block { margin-top: 20px; display: none; }
+  .action-block.show { display: block; }
+
+  .action-options { display: flex; flex-direction: column; gap: 8px; }
+  .action-btn {
+    background: white; border: 2px solid #e0e8f0; border-radius: 10px;
+    padding: 12px 16px; font-size: 13px; color: #1B2A4A; cursor: pointer;
+    text-align: left; transition: all 0.2s; font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.5;
+  }
+  .action-btn:hover:not(:disabled) { border-color: #1B2A4A; background: #f0f4f8; }
+  .action-btn.selected-best { border-color: #2e7d32; background: #e8f5e9; pointer-events: none; }
+  .action-btn.selected-ok { border-color: #f57f17; background: #fff8e1; pointer-events: none; }
+  .action-btn.selected-weak { border-color: #c62828; background: #ffebee; pointer-events: none; }
+  .action-btn:disabled { opacity: 0.45; pointer-events: none; }
+
+  /* FEEDBACK */
+  .feedback-box {
+    margin-top: 14px; border-radius: 10px; padding: 14px 18px;
+    font-size: 13px; line-height: 1.6; display: none;
+  }
+  .feedback-box.show { display: block; }
+  .feedback-box.correct { background: #e8f5e9; border: 1px solid #a5d6a7; color: #1b5e20; }
+  .feedback-box.wrong { background: #fff8e1; border: 1px solid #ffe082; color: #5c4000; }
+  .feedback-box.info { background: #e3f2fd; border: 1px solid #90caf9; color: #0d47a1; }
+
+  .barrier-tag {
+    display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px;
+    border-radius: 12px; background: #1B2A4A; color: white; margin-bottom: 6px;
+  }
+
+  /* FINAL */
+  .final-card {
+    background: linear-gradient(135deg, #1B2A4A, #2C4A7A); color: white;
+    border-radius: 16px; padding: 40px 32px; text-align: center;
+    display: none; margin-bottom: 20px; animation: fadeInUp 0.5s ease;
+  }
+  .final-card.show { display: block; }
+  @keyframes fadeInUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+  .final-icon { font-size: 52px; margin-bottom: 14px; }
+  .final-score { font-size: 46px; font-weight: 800; margin-bottom: 6px; }
+  .final-label { font-size: 14px; color: #a0b4cc; margin-bottom: 20px; }
+  .final-msg { font-size: 14px; color: #d0dce8; line-height: 1.7; max-width: 520px; margin: 0 auto 24px; }
+
+  .summary-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 20px 0; }
+  .summary-dot {
+    height: 8px; border-radius: 4px;
+    background: rgba(255,255,255,0.2);
+  }
+  .summary-dot.correct { background: #4DB8A4; }
+  .summary-dot.partial { background: #ffb74d; }
+  .summary-dot.wrong { background: #e57373; }
+
+  /* BUTTONS */
+  .btn { padding: 11px 24px; border-radius: 22px; font-size: 13px; font-weight: 700; cursor: pointer; border: none; transition: all 0.2s; }
+  .btn-primary { background: #1B2A4A; color: white; }
+  .btn-primary:hover { background: #2C4A7A; }
+  .btn-teal { background: #4DB8A4; color: white; }
+  .btn-teal:hover { background: #3a9a88; }
+  .btn-outline { background: transparent; color: white; border: 2px solid rgba(255,255,255,0.4); }
+  .btn-outline:hover { background: rgba(255,255,255,0.1); }
+
+  @media (max-width: 600px) { .barrier-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-label">Módulo 2 · Actividad · Nivel: Analizar</div>
+  <h1>¿Por qué no se reportó?</h1>
+  <p>Cinco situaciones reales de planta. En cada una, alguien detectó algo y no lo reportó. Tu tarea es identificar qué barrera lo explica — y decidir qué harías tú.</p>
+</div>
+
+<div class="instructions">
+  <strong>¿Cómo funciona?</strong> Cada situación tiene dos preguntas: primero identifica la barrera al reporte que mejor explica lo que ocurrió, luego decide qué acción tomarías tú. No hay trampa — las situaciones son deliberadamente reconocibles.
+</div>
+
+<div class="progress-bar">
+  <div class="progress-dots" id="progress-dots">
+    <div class="dot current" id="dot-1">1</div>
+    <div class="dot" id="dot-2">2</div>
+    <div class="dot" id="dot-3">3</div>
+    <div class="dot" id="dot-4">4</div>
+    <div class="dot" id="dot-5">5</div>
+  </div>
+  <div class="progress-label" id="progress-label">Situación 1 de 5</div>
+</div>
+
+<div id="situation-container"></div>
+<div id="final-card" class="final-card"></div>
+
+<script>
+// ── AUDIO ──────────────────────────────────────────────────────────
+let audioCtx = null;
+function getCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+function playTone(freqs, type, vol, dur) {
+  try {
+    const ctx = getCtx();
+    if (ctx.state === 'suspended') ctx.resume();
+    freqs.forEach((f, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = type; o.frequency.value = f;
+      const t = ctx.currentTime + i * 0.12;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(vol, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.start(t); o.stop(t + dur + 0.05);
+    });
+  } catch(e) {}
+}
+function playCorrect()   { playTone([523.25, 783.99], 'sine', 0.20, 0.35); }
+function playPartial()   { playTone([440], 'sine', 0.16, 0.30); }
+function playWrong()     { playTone([180], 'sawtooth', 0.13, 0.22); }
+function playCelebrate() { playTone([523.25, 659.25, 783.99, 1046.5], 'sine', 0.18, 0.45); }
+document.addEventListener('mousedown', () => {
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}, { once: true });
+
+// ── DATA ───────────────────────────────────────────────────────────
+const BARRIERS = [
+  { id: 'bystander',      icon: '👥', label: 'Efecto espectador',          desc: '"Alguien más lo habrá visto"' },
+  { id: 'fear',           icon: '😶', label: 'Miedo a las consecuencias',   desc: '"¿Y si me meto en un lío por reportarlo?"' },
+  { id: 'normalisation',  icon: '🔄', label: 'Normalización',              desc: '"Siempre ha sido así, es lo normal"' },
+  { id: 'futility',       icon: '🤷', label: '"Ya lo reporté y no pasó nada"', desc: 'Desconfianza en el sistema' },
+  { id: 'trivial',        icon: '🔍', label: '"Es muy pequeño"',           desc: 'Infravaloración del riesgo' },
+  { id: 'colleague',      icon: '🤝', label: '"No quiero señalar a un compañero"', desc: 'Lealtad mal entendida' },
+];
+
+const situations = [
+  {
+    num: 1,
+    scene: 'Laura detecta que un compañero del turno anterior ha dejado un bidón de producto químico sin tapar junto a una máquina, fuera del área de almacenamiento designada. Sabe perfectamente que debería reportarlo, pero al final no lo hace.',
+    detail: 'Cuando una compañera le pregunta si lo ha reportado, Laura responde: "No sé... igual parece que estoy buscando problemas. No quiero que piensen que voy señalando lo que hacen los demás o que intento quedar bien con EHS. Prefiero no meterme."',
+    barrier: 'fear',
+    barrierFeedback: 'Exacto. Laura sabe que hay un riesgo y sabe que debería reportarlo, pero le frena el miedo a cómo será percibida — como alguien que busca problemas, que delata, o que quiere quedar bien con la dirección. Este miedo a las consecuencias sociales es una barrera muy real y muy común, especialmente en equipos con mucho tiempo trabajando juntos.',
+    barrierWrongFeedback: 'La clave está en las palabras de Laura: "igual parece que estoy buscando problemas", "no quiero que piensen que voy señalando". Laura ve el riesgo claramente y sabe que debería reportarlo — lo que la frena no es que piense que otros lo harán, ni que no confíe en el sistema, sino el miedo a cómo la van a ver sus compañeros. Esa es la barrera del miedo a las consecuencias.',
+    actions: [
+      { text: 'Reportar la condición. El reporte no tiene nombre — informa al sistema de un riesgo, no señala a una persona. Esa distinción es la que hay que tener clara.', quality: 'best', feedback: 'La respuesta correcta. Reportar una condición insegura no es delatar a quien la creó — es informar al sistema de que existe un riesgo que necesita atención. El foco del reporte es el bidón sin tapar fuera de su lugar, no el compañero. Mientras esa distinción esté clara, el miedo a las consecuencias no tiene base real.' },
+      { text: 'Tapar el bidón y colocarlo en su sitio tú misma, sin reportar.', quality: 'ok', feedback: 'Resolver la condición inmediata es positivo. Pero sin el reporte, el sistema no sabe que ocurrió — y si ese almacenamiento incorrecto es habitual, nadie puede actuar sobre el patrón. La acción inmediata y el reporte no son excluyentes: puedes hacer ambas cosas.' },
+      { text: 'No hacer nada. Si tuvieras que reportar todo lo que ves, no acabarías nunca.', quality: 'weak', feedback: 'Un bidón de producto químico sin tapar fuera del área designada es exactamente el tipo de condición que se reporta — no porque haya que reportar "todo", sino porque ese riesgo concreto puede causar intoxicación, incendio o un accidente de manipulación. La línea no es "todo o nada" sino "¿hay un riesgo real aquí?" — y en este caso, sí.' },
+    ]
+  },
+  {
+    num: 2,
+    scene: 'Elena trabaja en el área de ensacado. Hay un punto del suelo cerca de una máquina donde se acumula polvo de yeso regularmente. Lleva más de un año así. Nadie lo ha reportado nunca.',
+    detail: 'Cuando una técnica de EHS le pregunta si lo considera un riesgo, Elena responde: "Bueno, llevamos así años y nunca ha pasado nada. Supongo que no es para tanto. Ya sabemos que hay zonas así en la planta."',
+    barrier: 'normalisation',
+    barrierFeedback: 'Correcto. Elena ha normalizado la desviación: una condición que objetivamente es un riesgo ha dejado de percibirse como tal porque lleva demasiado tiempo sin consecuencias visibles. "Siempre ha sido así" y "nunca ha pasado nada" son las señales más claras de este fenómeno.',
+    barrierWrongFeedback: 'La clave está en las palabras de Elena: "llevamos así años", "nunca ha pasado nada", "ya sabemos que hay zonas así". No es que piense que otros lo reportarán, ni que no confíe en el sistema — es que ha dejado de percibir la condición como un riesgo porque lleva demasiado tiempo siendo "lo normal". Eso es normalización.',
+    actions: [
+      { text: 'Reportar la condición aunque lleve años así — especialmente porque lleva años así.', quality: 'best', feedback: 'Exactamente la actitud correcta. El tiempo que lleva una condición sin consecuencias no la hace menos peligrosa — la hace más peligrosa, porque ha conseguido volverse invisible. Mientras se sigue reportando, la normalización no puede completarse.' },
+      { text: 'Comentárselo al encargado verbalmente pero sin hacer un reporte formal, ya que "todo el mundo lo sabe".', quality: 'ok', feedback: 'Que algo sea conocido verbalmente no significa que exista en el sistema. Sin reporte formal, la condición no compite por recursos, no aparece en auditorías y no genera presión para resolverse. El reporte formal es lo que convierte el conocimiento en acción.' },
+      { text: 'No reportar — si llevara años así sin consecuencias, probablemente no sea un riesgo real.', quality: 'weak', feedback: 'Este es el razonamiento que alimenta la normalización. La ausencia de consecuencias visibles no implica ausencia de riesgo — implica que el riesgo no se ha materializado todavía. La acumulación de polvo de yeso puede generar caídas, problemas respiratorios y condiciones de incendio.' },
+    ]
+  },
+  {
+    num: 3,
+    scene: 'Carlos ha reportado dos veces en los últimos seis meses que la iluminación de una zona del almacén es insuficiente. No ha recibido ninguna respuesta visible, y la iluminación sigue igual.',
+    detail: 'Hoy detecta que una eslinga del área de carga tiene una rozadura visible. Carlos piensa en reportarlo, pero finalmente no lo hace. Cuando se le pregunta, responde: "¿Para qué? Lo que he reportado antes sigue igual. Reportar no sirve para nada aquí."',
+    barrier: 'futility',
+    barrierFeedback: 'Correcto. La experiencia acumulada de Carlos — reportar sin ver respuesta — ha erosionado su confianza en el sistema. Esta es la barrera más legítima y la más difícil de combatir, porque no viene de un sesgo cognitivo sino de hechos reales. Y es precisamente la más importante de interrumpir: si el sistema no cierra el ciclo, el reporte se extingue.',
+    barrierWrongFeedback: 'Fíjate en el contexto: Carlos ya ha reportado antes y no ha visto respuesta. Su falta de reporte no viene de pensar que otros lo harán, ni de no ver el riesgo, sino de una desconfianza concreta y justificada en que el sistema responda. Esa es la barrera más legítima — y la más importante de abordar desde el equipo EHS.',
+    actions: [
+      { text: 'Reportar la eslinga y, si no hay respuesta en un plazo razonable, comunicarlo directamente al equipo EHS para que sepan que el ciclo de respuesta está fallando.', quality: 'best', feedback: 'La respuesta más completa. Reportar mantiene el riesgo visible en el sistema. Y comunicar al equipo EHS que el ciclo no está cerrando es información valiosa — el módulo lo dice explícitamente: "Queremos saber cuándo el sistema falla, no para ignorarlo, sino para poder mejorarlo."' },
+      { text: 'Reportar la eslinga igualmente, aunque con poca esperanza de que sirva de algo.', quality: 'ok', feedback: 'Correcto en la acción, aunque la actitud de desconfianza es comprensible. Lo importante es que el reporte mantiene el riesgo documentado — y un riesgo documentado diez veces construye un historial que es el argumento más sólido para exigir una respuesta.' },
+      { text: 'No reportar. Si el sistema no responde, no tiene sentido seguir alimentándolo.', quality: 'weak', feedback: 'Esta decisión tiene una consecuencia directa: la eslinga con rozadura no entra en el sistema, no genera presión para su revisión, y si falla, habrá sido un riesgo invisible. Un problema no reportado no existe en ningún sistema — y lo que no existe no se puede resolver.' },
+    ]
+  },
+  {
+    num: 4,
+    scene: 'Durante un descanso, Ana ve a su compañero Javier retirar una protección de una máquina para limpiar más fácilmente. Javier es un compañero de muchos años, con mucha experiencia. Ana no dice nada y no reporta el acto inseguro.',
+    detail: 'Más tarde comenta con otra compañera: "No voy a ir a reportar a Javier. Llevamos años trabajando juntos. Él sabe lo que hace."',
+    barrier: 'colleague',
+    barrierFeedback: 'Correcto. Ana está confundiendo lealtad hacia su compañero con protegerle. Reportar un acto inseguro no es delatar — es exactamente lo contrario: es asegurarse de que Javier no sufra una lesión que podría haberse evitado. La seguridad madura se basa en cuidarse mutuamente, no en mirar hacia otro lado.',
+    barrierWrongFeedback: 'La clave está en la explicación de Ana: "No voy a reportar a Javier", "llevamos años trabajando juntos". No es que no vea el riesgo ni que asuma que otros lo reportarán — es que no quiere que su reporte afecte a un compañero. Esa es la barrera de la lealtad mal entendida.',
+    actions: [
+      { text: 'Hablar directamente con Javier en el momento — "Javi, pon la protección" — y reportar el acto inseguro igualmente, porque el reporte no es contra Javier sino para el sistema: sin ese dato, el sistema no puede identificar si esta conducta es puntual o un patrón que necesita atención.', quality: 'best', feedback: 'La respuesta más completa. La conversación directa cuida la relación y puede resolver la situación inmediata. El reporte, además, cumple una función que va más allá de Javier: permite al sistema detectar si esta conducta es puntual o si hay un patrón en esa área que necesita atención. Reportar no es delatar — es contribuir a que el sistema aprenda.' },
+      { text: 'Hablar con Javier pero no reportarlo, confiando en que con la conversación es suficiente.', quality: 'ok', feedback: 'Hablar con el compañero es un paso importante y necesario. Pero solo la conversación no alimenta el sistema: si este acto inseguro no se registra, el sistema no puede saber si es un caso aislado o si ocurre regularmente en ese puesto. El reporte no reemplaza la conversación — la complementa.' },
+      { text: 'No hacer nada. Javier tiene mucha experiencia y sabe lo que hace.', quality: 'weak', feedback: 'La experiencia no elimina el riesgo de atrapamiento con una máquina sin protección. De hecho, la confianza que da la experiencia es uno de los factores que más contribuye a los accidentes: "llevo años haciendo esto sin protección y nunca me ha pasado nada." No reportar es dejar a Javier solo ante ese riesgo.' },
+    ]
+  },
+  {
+    num: 5,
+    scene: 'Pedro detecta que la señalización de un paso de peatones en el patio exterior está desgastada y casi invisible. Lo ve varios días seguidos. No lo reporta.',
+    detail: 'Cuando un compañero le pregunta si lo ha reportado, Pedro responde: "Bah, es solo una señal desgastada. Tampoco es que sea un riesgo grave. Hay cosas más importantes que reportar."',
+    barrier: 'trivial',
+    barrierFeedback: 'Correcto. Pedro está infravalorando el riesgo. Una señalización de paso de peatones invisible en el patio de una planta con circulación de carretillas es exactamente el tipo de condición que, sin consecuencias inmediatas, parece menor — pero que en la base de la pirámide de Heinrich puede ser el antecedente de un atropello. Los pequeños son exactamente los que hay que reportar.',
+    barrierWrongFeedback: 'La clave está en "es solo una señal desgastada" y "no es un riesgo grave". Pedro sí ve la condición, sí podría reportarla, y el sistema probablemente respondería — pero no lo hace porque no le parece suficientemente importante. Esa infravaloración del riesgo es la barrera del "es muy pequeño, no merece la pena".',
+    actions: [
+      { text: 'Reportar la señalización desgastada. En un patio con circulación de carretillas, la visibilidad de los pasos de peatones es crítica.', quality: 'best', feedback: '¡Exacto! El nivel de seguridad que tiene Soneja existe en gran parte porque los pequeños nunca se dejaron pasar. Una señal invisible en un patio con carretillas no es un problema menor — es exactamente el tipo de IF5 que previene un atropello.' },
+      { text: 'Reportarlo solo si vuelves a verlo al día siguiente, para confirmar que no era una impresión.', quality: 'ok', feedback: 'Esperar para confirmar puede ser razonable con condiciones ambiguas, pero una señalización desgastada no tiene ambigüedad — es visible y verificable. Esperar introduce el riesgo de que el reporte nunca ocurra si la rutina absorbe la atención.' },
+      { text: 'No reportar. Hay riesgos más importantes y el equipo EHS tiene cosas más urgentes que atender.', quality: 'weak', feedback: 'Esta lógica, aplicada por todos, vacía la base de la pirámide. El equipo EHS no tiene que elegir entre la señal y otros riesgos — puede gestionarlos en paralelo. Y una señal de paso de peatones invisible en zona de carretillas puede ser el antecedente de un atropello.' },
+    ]
+  }
+];
+
+// ── STATE ──────────────────────────────────────────────────────────
+let current = 0;
+let results = []; // each: { barrierCorrect, actionQuality }
+let barrierAnswered = false;
+
+// ── RENDER ─────────────────────────────────────────────────────────
+function render(idx) {
+  const s = situations[idx];
+  barrierAnswered = false;
+
+  const barrierBtns = BARRIERS.map((b, i) => `
+    <button class="barrier-btn" id="b-${i}" onclick="answerBarrier(${idx}, '${b.id}')">
+      <span class="barrier-icon">${b.icon}</span>
+      <span><strong>${b.label}</strong><br><span style="font-weight:400;color:#666;font-size:11px">${b.desc}</span></span>
+    </button>`
+  ).join('');
+
+  const actionBtns = s.actions.map((a, i) => `
+    <button class="action-btn" id="a-${i}" onclick="answerAction(${idx}, ${i})">
+      ${a.text}
+    </button>`
+  ).join('');
+
+  document.getElementById('situation-container').innerHTML = `
+    <div class="situation-card">
+      <div class="situation-num">Situación ${s.num} de ${situations.length}</div>
+      <div class="scene-box">
+        <div class="scene-label">📋 Lo que ocurrió</div>
+        <div class="scene-text">${s.scene}</div>
+        <div class="scene-detail">${s.detail}</div>
+      </div>
+
+      <div class="question-block">
+        <div class="question-label">
+          <div class="q-num">1</div>
+          ¿Qué barrera al reporte explica mejor esta situación?
+        </div>
+        <div class="barrier-grid">${barrierBtns}</div>
+        <div id="barrier-feedback" class="feedback-box"></div>
+      </div>
+
+      <div class="action-block" id="action-block">
+        <div class="question-label" style="margin-bottom:12px">
+          <div class="q-num">2</div>
+          Ahora tú: ¿qué harías en esta situación?
+        </div>
+        <div class="action-options">${actionBtns}</div>
+        <div id="action-feedback" class="feedback-box"></div>
+      </div>
+    </div>`;
+
+  updateProgress(idx);
+}
+
+// ── BARRIER ANSWER ─────────────────────────────────────────────────
+function answerBarrier(idx, barrierId) {
+  if (barrierAnswered) return;
+  barrierAnswered = true;
+
+  const s = situations[idx];
+  const isCorrect = barrierId === s.barrier;
+  const correctIdx = BARRIERS.findIndex(b => b.id === s.barrier);
+  const chosenIdx  = BARRIERS.findIndex(b => b.id === barrierId);
+
+  BARRIERS.forEach((_, i) => {
+    const btn = document.getElementById('b-' + i);
+    if (btn) btn.disabled = true;
+  });
+
+  const fb = document.getElementById('barrier-feedback');
+  fb.classList.add('show');
+
+  if (isCorrect) {
+    playCorrect();
+    document.getElementById('b-' + correctIdx).className = 'barrier-btn selected-correct';
+    fb.className = 'feedback-box show correct';
+    fb.innerHTML = `<span class="barrier-tag">${BARRIERS[correctIdx].label}</span><br>✅ ${s.barrierFeedback}`;
+  } else {
+    playWrong();
+    document.getElementById('b-' + chosenIdx).className = 'barrier-btn selected-wrong';
+    document.getElementById('b-' + correctIdx).className = 'barrier-btn revealed';
+    fb.className = 'feedback-box show wrong';
+    fb.innerHTML = `<span class="barrier-tag">${BARRIERS[correctIdx].label}</span><br>⚠️ ${s.barrierWrongFeedback}`;
+  }
+
+  results[idx] = { barrierCorrect: isCorrect, actionQuality: null };
+
+  // Show Part 2 after delay
+  setTimeout(() => {
+    const ab = document.getElementById('action-block');
+    if (ab) { ab.classList.add('show'); ab.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+  }, isCorrect ? 1600 : 2600);
+}
+
+// ── ACTION ANSWER ──────────────────────────────────────────────────
+function answerAction(idx, actionIdx) {
+  const s = situations[idx];
+  const action = s.actions[actionIdx];
+
+  s.actions.forEach((_, i) => {
+    const btn = document.getElementById('a-' + i);
+    if (btn) btn.disabled = true;
+  });
+
+  const clickedBtn = document.getElementById('a-' + actionIdx);
+  const fb = document.getElementById('action-feedback');
+  fb.classList.add('show');
+
+  if (action.quality === 'best') {
+    playCorrect();
+    clickedBtn.className = 'action-btn selected-best';
+    fb.className = 'feedback-box show correct';
+    fb.innerHTML = `✅ ${action.feedback}`;
+  } else if (action.quality === 'ok') {
+    playPartial();
+    clickedBtn.className = 'action-btn selected-ok';
+    fb.className = 'feedback-box show wrong';
+    fb.innerHTML = `⚠️ ${action.feedback}`;
+  } else {
+    playWrong();
+    clickedBtn.className = 'action-btn selected-weak';
+    fb.className = 'feedback-box show wrong';
+    fb.innerHTML = `❌ ${action.feedback}`;
+  }
+
+  results[idx].actionQuality = action.quality;
+
+  // Update dot
+  const dot = document.getElementById('dot-' + (idx + 1));
+  const allGood = results[idx].barrierCorrect && action.quality === 'best';
+  const allWrong = !results[idx].barrierCorrect && action.quality === 'weak';
+  dot.classList.remove('current');
+  dot.classList.add(allGood ? 'done' : allWrong ? 'wrong' : 'done');
+
+  const delay = action.quality === 'best' ? 5000 : action.quality === 'ok' ? 5500 : 6000;
+
+  setTimeout(() => {
+    if (idx < situations.length - 1) {
+      current = idx + 1;
+      render(current);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      showFinal();
+    }
+  }, delay);
+}
+
+// ── PROGRESS ───────────────────────────────────────────────────────
+function updateProgress(idx) {
+  document.getElementById('progress-label').textContent = `Situación ${idx + 1} de ${situations.length}`;
+  document.querySelectorAll('.dot').forEach((d, i) => {
+    if (i === idx) d.classList.add('current');
+    else d.classList.remove('current');
+  });
+}
+
+// ── FINAL ──────────────────────────────────────────────────────────
+function showFinal() {
+  document.getElementById('situation-container').style.display = 'none';
+
+  const barrierScore  = results.filter(r => r.barrierCorrect).length;
+  const actionBest    = results.filter(r => r.actionQuality === 'best').length;
+  const totalScore    = barrierScore + actionBest;
+  const maxScore      = situations.length * 2;
+  const pct           = Math.round(totalScore / maxScore * 100);
+
+  let icon, msg;
+  if (pct >= 90) {
+    icon = '🎯';
+    msg = 'Identificas con precisión los mecanismos que frenan el reporte y sabes cómo romperlos. Esa capacidad de análisis es exactamente lo que convierte a alguien en un referente de cultura de seguridad en su equipo.';
+  } else if (pct >= 60) {
+    icon = '✅';
+    msg = 'Tienes una buena base para analizar las barreras al reporte. Repasa las situaciones donde dudaste — las barreras más sutiles (normalización, efecto espectador) son precisamente las que más ocurren en plantas con buen historial de seguridad.';
+  } else {
+    icon = '📖';
+    msg = 'Las barreras al reporte son difíciles de reconocer precisamente porque son muy humanas. Vuelve a revisar las secciones 6 y 7 del módulo antes de continuar — entender estos mecanismos es la única forma de no dejarse llevar por ellos.';
+  }
+
+  const summaryDots = results.map(r => {
+    const cls = (r.barrierCorrect && r.actionQuality === 'best') ? 'correct' : r.actionQuality === 'weak' ? 'wrong' : 'partial';
+    return `<div class="summary-dot ${cls}"></div>`;
+  }).join('');
+
+  const fc = document.getElementById('final-card');
+  fc.classList.add('show');
+  fc.innerHTML = `
+    <div class="final-icon">${icon}</div>
+    <div class="final-score">${totalScore}/${maxScore}</div>
+    <div class="final-label">${pct}% · ${barrierScore}/5 barreras identificadas · ${actionBest}/5 acciones óptimas</div>
+    <div class="summary-grid">${summaryDots}</div>
+    <div class="final-msg">${msg}</div>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <button class="btn btn-outline" onclick="restart()">↺ Repetir la actividad</button>
+    </div>`;
+
+  
+  if (pct >= 70) {
+    const codeBox = document.createElement('div');
+    codeBox.style.marginTop = '24px';
+    codeBox.style.padding = '18px';
+    codeBox.style.background = '#E8F7F4';
+    codeBox.style.borderLeft = '4px solid #4DB8A4';
+    codeBox.style.borderRadius = '10px';
+    codeBox.style.fontSize = '14px';
+    codeBox.style.fontWeight = '600';
+    codeBox.style.textAlign = 'center';
+    codeBox.innerHTML = 'Código de acceso para continuar el módulo:<br><span style="font-size:22px;font-weight:800;color:#1B2A4A;letter-spacing:2px;">M2A1‑Q7L9</span>';
+    fc.appendChild(codeBox);
+  }
+
+  playCelebrate();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function restart() {
+  current = 0; results = [];
+  document.getElementById('final-card').classList.remove('show');
+  document.getElementById('situation-container').style.display = 'block';
+  document.querySelectorAll('.dot').forEach((d, i) => {
+    d.className = 'dot' + (i === 0 ? ' current' : '');
+  });
+  render(0);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── START ──────────────────────────────────────────────────────────
+render(0);
+</script>
+</body>
+</html>
