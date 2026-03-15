@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Módulo 3 · Actividad 1 · Clasifica los estándares y peligros</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-height: 100vh; padding: 24px; }
+
+  .header {
+    background: linear-gradient(135deg, #1B2A4A 0%, #2C4A7A 100%);
+    color: white; border-radius: 16px; padding: 28px 32px; margin-bottom: 24px;
+  }
+  .header-label { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #4DB8A4; margin-bottom: 8px; }
+  .header h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+  .header p { font-size: 13px; color: #a0b4cc; line-height: 1.5; }
+
+  .instructions {
+    background: white; border-radius: 12px; padding: 16px 20px; margin-bottom: 20px;
+    border-left: 4px solid #4DB8A4; font-size: 13px; color: #444; line-height: 1.6;
+  }
+
+  .tab-bar { display: flex; gap: 8px; margin-bottom: 16px; }
+  .tab {
+    padding: 10px 20px; border-radius: 20px; font-size: 12px; font-weight: 700;
+    cursor: pointer; border: 2px solid transparent; transition: all 0.2s; letter-spacing: 0.5px;
+  }
+  .tab.active-tab { background: #1B2A4A; color: white; }
+  .tab:not(.active-tab) { background: white; color: #1B2A4A; border-color: #c0ccd8; }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .score-bar {
+    background: white; border-radius: 12px; padding: 14px 24px; margin-bottom: 16px;
+    display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+  }
+  .score-item { text-align: center; }
+  .score-num { font-size: 28px; font-weight: 800; color: #1B2A4A; }
+  .score-label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+  .progress-wrap { flex: 1; min-width: 160px; }
+  .progress-track { height: 8px; background: #e0e8f0; border-radius: 4px; overflow: hidden; margin-top: 4px; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #4DB8A4, #2C9A7A); border-radius: 4px; transition: width 0.4s ease; width: 0%; }
+  .progress-text { font-size: 11px; color: #888; }
+
+  .game-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+  .column-title {
+    font-size: 12px; font-weight: 700; color: #1B2A4A; letter-spacing: 1px;
+    text-transform: uppercase; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 2px solid #1B2A4A;
+  }
+
+  .drop-zone {
+    min-height: 110px; border: 2px dashed #c0cdd8; border-radius: 10px;
+    padding: 10px; margin-bottom: 12px; background: #f8fafc; transition: all 0.2s;
+  }
+  .drop-zone.drag-over { border-color: #4DB8A4; background: #eaf9f5; transform: scale(1.01); box-shadow: 0 0 0 3px rgba(77,184,164,0.2); }
+  .drop-zone.flash-correct { animation: flashGreen 0.5s ease; }
+  .drop-zone.flash-wrong { animation: flashRed 0.4s ease; }
+
+  @keyframes flashGreen { 0% { background: #b9f6ca; border-color: #2e7d32; } 100% { background: #f8fafc; } }
+  @keyframes flashRed { 0% { background: #ffcdd2; border-color: #c62828; } 100% { background: #f8fafc; border-color: #c0cdd8; } }
+
+  .zone-label { font-size: 10px; font-weight: 700; color: #999; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+
+  .card {
+    background: white; border: 2px solid #e0e8f0; border-radius: 8px;
+    padding: 9px 12px; margin-bottom: 7px; font-size: 12px; color: #1B2A4A;
+    font-weight: 600; cursor: grab; user-select: none; transition: all 0.2s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.07); display: flex; align-items: center; gap: 6px;
+  }
+  .card:hover { transform: translateY(-2px); box-shadow: 0 5px 12px rgba(0,0,0,0.12); border-color: #4DB8A4; }
+  .card.dragging { opacity: 0.3; transform: scale(0.96); }
+  .card.placed { border-color: #2e7d32; background: #f1f8f1; cursor: default; }
+  .card.placed:hover { transform: none; box-shadow: 0 2px 4px rgba(0,0,0,0.07); }
+  .card.bounce-back { animation: bounceBack 0.4s ease; }
+  @keyframes bounceBack { 0% { transform: scale(0.9); opacity: 0.5; } 60% { transform: scale(1.05); } 100% { transform: scale(1); opacity: 1; } }
+  .check-icon { color: #2e7d32; font-size: 13px; display: none; flex-shrink: 0; }
+  .card.placed .check-icon { display: inline; }
+
+  .card-pool { background: white; border-radius: 12px; padding: 18px; margin-bottom: 16px; }
+  .card-pool-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: #888; margin-bottom: 14px; }
+  .pool-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 7px; }
+
+  .completion-banner {
+    background: linear-gradient(135deg, #1B2A4A, #2C4A7A); color: white;
+    border-radius: 16px; padding: 32px; text-align: center; display: none;
+    animation: fadeInUp 0.5s ease;
+  }
+  .completion-banner.show { display: block; }
+  @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  .trophy { font-size: 56px; margin-bottom: 12px; }
+  .completion-banner h2 { font-size: 22px; margin-bottom: 8px; }
+  .completion-banner p { color: #a0b4cc; font-size: 13px; margin-bottom: 20px; }
+
+  .btn { padding: 11px 24px; border-radius: 22px; font-size: 13px; font-weight: 700; cursor: pointer; border: none; transition: all 0.2s; }
+  .btn-primary { background: #4DB8A4; color: white; }
+  .btn-primary:hover { background: #3a9a88; transform: translateY(-1px); }
+  .btn-reset { background: white; color: #1B2A4A; border: 2px solid #1B2A4A; }
+  .btn-reset:hover { background: #f0f4f8; }
+  .btn-outline { background: transparent; color: white; border: 2px solid rgba(255,255,255,0.4); }
+  .btn-outline:hover { background: rgba(255,255,255,0.1); }
+
+  @media (max-width: 680px) {
+    .game-layout { grid-template-columns: 1fr; }
+    .pool-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-label">Módulo 3 · Actividad 1 de 2</div>
+  <h1>Clasifica los estándares SG y los tipos de peligro</h1>
+  <p>Arrastra cada tarjeta a su categoría correcta. Solo se aceptan colocaciones correctas — si el elemento no pertenece a esa categoría, volverá a la bandeja.</p>
+</div>
+
+<div class="instructions">
+  <strong>¿Cómo se juega?</strong> Selecciona una pestaña, luego arrastra cada tarjeta desde la bandeja hasta la zona correcta. Si la colocación es incorrecta, la tarjeta vuelve automáticamente. La actividad se completa cuando todas las tarjetas estén en su sitio.
+</div>
+
+<div class="tab-bar">
+  <div class="tab active-tab" onclick="switchTab('standards')">📋 Estándares SG (19)</div>
+  <div class="tab" onclick="switchTab('hazards')">⚠️ Tipos de peligro (32)</div>
+</div>
+
+<!-- STANDARDS PANEL -->
+<div id="panel-standards" class="panel active">
+  <div class="score-bar">
+    <div class="score-item"><div class="score-num" id="std-score">0</div><div class="score-label">Colocados</div></div>
+    <div class="score-item"><div class="score-num">19</div><div class="score-label">Total</div></div>
+    <div class="progress-wrap">
+      <div class="progress-text">Progreso</div>
+      <div class="progress-track"><div class="progress-fill" id="std-progress"></div></div>
+    </div>
+    <button class="btn btn-reset" style="margin-left:auto" onclick="resetStandards()">↺ Reiniciar</button>
+  </div>
+  <div class="game-layout">
+    <div>
+      <div class="column-title">🏭 Entorno y personas</div>
+      <div class="drop-zone" id="zone-std-entorno" data-zone="entorno" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event,'std')">
+        <div class="zone-label">Condiciones del lugar, agentes y personas</div>
+      </div>
+      <div class="column-title" style="margin-top:16px">🔧 Equipos y máquinas</div>
+      <div class="drop-zone" id="zone-std-equipos" data-zone="equipos" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event,'std')">
+        <div class="zone-label">Maquinaria, herramientas y equipos</div>
+      </div>
+    </div>
+    <div>
+      <div class="column-title">🚦 Procedimientos y permisos</div>
+      <div class="drop-zone" id="zone-std-procedimientos" data-zone="procedimientos" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event,'std')">
+        <div class="zone-label">Normativas, permisos, tráfico y controles</div>
+      </div>
+      <div class="column-title" style="margin-top:16px">🧤 Protección individual</div>
+      <div class="drop-zone" id="zone-std-proteccion" data-zone="proteccion" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event,'std')">
+        <div class="zone-label">Equipos de protección individual</div>
+      </div>
+    </div>
+  </div>
+  <div class="card-pool">
+    <div class="card-pool-title">Bandeja — arrastra cada estándar a su categoría</div>
+    <div class="pool-grid" id="std-pool"></div>
+  </div>
+  <div id="std-complete" class="completion-banner">
+    <div class="trophy">🏆</div>
+    <h2>¡Todos los estándares clasificados!</h2>
+    <p>Has colocado correctamente los 19 estándares SG. Ahora practica con los tipos de peligro.</p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:4px">
+      <button class="btn btn-outline" onclick="resetStandards()">↺ Repetir estándares</button>
+      <button class="btn btn-primary" onclick="switchTab('hazards')">Ir a tipos de peligro →</button>
+    </div>
+  </div>
+</div>
+
+<!-- HAZARDS PANEL -->
+<div id="panel-hazards" class="panel">
+  <div class="score-bar">
+    <div class="score-item"><div class="score-num" id="haz-score">0</div><div class="score-label">Colocados</div></div>
+    <div class="score-item"><div class="score-num">32</div><div class="score-label">Total</div></div>
+    <div class="progress-wrap">
+      <div class="progress-text">Progreso</div>
+      <div class="progress-track"><div class="progress-fill" id="haz-progress"></div></div>
+    </div>
+    <button class="btn btn-reset" style="margin-left:auto" onclick="resetHazards()">↺ Reiniciar</button>
+  </div>
+  <div class="game-layout">
+    <div>
+      <div class="column-title">💪 Ergonomía (A)</div>
+      <div class="drop-zone" id="zone-haz-A" data-zone="A" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event,'haz')">
+        <div class="zone-label">A — Ergonomía</div>
+      </div>
+      <div class="column-title" style="margin-top:14px">☣️ Agentes químicos y físicos (B / C)</div>
+      <div class="drop-zone" id="zone-haz-BC" data-zone="BC" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event,'haz')">
+        <div class="zone-label">B — Químicos · C — Físicos</div>
+      </div>
+      <div class="column-title" style="margin-top:14px">⬇️ Caídas (D)</div>
+      <div class="drop-zone" id="zone-haz-D" data-zone="D" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event,'haz')">
+        <div class="zone-label">D — Caídas</div>
+      </div>
+    </div>
+    <div>
+      <div class="column-title">⚡ Térmicos y mecánicos (E / F)</div>
+      <div class="drop-zone" id="zone-haz-EF" data-zone="EF" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event,'haz')">
+        <div class="zone-label">E — Térmicos · F — Mecánicos</div>
+      </div>
+      <div class="column-title" style="margin-top:14px">🚗 Atropellos (G)</div>
+      <div class="drop-zone" id="zone-haz-G" data-zone="G" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event,'haz')">
+        <div class="zone-label">G — Atropellos</div>
+      </div>
+      <div class="column-title" style="margin-top:14px">📌 Otros (H)</div>
+      <div class="drop-zone" id="zone-haz-H" data-zone="H" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event,'haz')">
+        <div class="zone-label">H — Otros</div>
+      </div>
+    </div>
+  </div>
+  <div class="card-pool">
+    <div class="card-pool-title">Bandeja — arrastra cada tipo de peligro a su categoría</div>
+    <div class="pool-grid" id="haz-pool"></div>
+  </div>
+  <div id="haz-complete" class="completion-banner">
+    <div class="trophy">🎉</div>
+    <h2>¡Actividad completada!</h2>
+    <p>Has clasificado correctamente los 32 tipos de peligro. Estás listo para la Actividad 2.</p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:4px">
+      <button class="btn btn-outline" onclick="resetHazards()">↺ Repetir tipos de peligro</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── AUDIO ──────────────────────────────────────────────────────────────
+let audioCtx = null;
+
+function getCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function playTone(freqs, type, vol, duration) {
+  try {
+    const ctx = getCtx();
+    if (ctx.state === 'suspended') ctx.resume();
+    freqs.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = type;
+      osc.frequency.value = freq;
+      const t = ctx.currentTime + i * 0.12;
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(vol, t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+      osc.start(t);
+      osc.stop(t + duration + 0.05);
+    });
+  } catch(e) { /* audio not critical */ }
+}
+
+function playCorrect()     { playTone([523.25, 783.99], 'sine', 0.22, 0.35); }
+function playWrong()       { playTone([180], 'sawtooth', 0.15, 0.22); }
+function playCelebration() { playTone([523.25, 659.25, 783.99, 1046.5], 'sine', 0.20, 0.45); }
+
+// ── DATA ───────────────────────────────────────────────────────────────
+const standards = [
+  { id:'s1',  text:'SG- Evaluación de riesgos',                               zone:'entorno' },
+  { id:'s2',  text:'SG- Lugares de trabajo',                                   zone:'entorno' },
+  { id:'s3',  text:'SG- Ruido laboral (NOS)',                                  zone:'entorno' },
+  { id:'s4',  text:'SG- Espacios confinados',                                  zone:'entorno' },
+  { id:'s5',  text:'SG- Sistemas de combustión',                               zone:'entorno' },
+  { id:'s19', text:'SG- Materias primas, productos químicos y aditivos (TAS)', zone:'entorno' },
+  { id:'s7',  text:'SG- Seguridad eléctrica',                                  zone:'equipos' },
+  { id:'s8',  text:'SG- Seguridad en máquinas',                                zone:'equipos' },
+  { id:'s9',  text:'SG-LOTO',                                                  zone:'equipos' },
+  { id:'s10', text:'SG- Carretillas elevadoras',                               zone:'equipos' },
+  { id:'s11', text:'SG- Equipos de elevación',                                 zone:'equipos' },
+  { id:'s6',  text:'SG- Plan de emergencia',                                   zone:'procedimientos' },
+  { id:'s12', text:'SG- Trabajos en altura',                                   zone:'procedimientos' },
+  { id:'s13', text:'SG- Permisos de trabajo',                                  zone:'procedimientos' },
+  { id:'s14', text:'SG- Control de contratas',                                 zone:'procedimientos' },
+  { id:'s15', text:'SG- Vehículos y peatón',                                   zone:'procedimientos' },
+  { id:'s16', text:'SG- Almacenamiento, carga y descarga',                     zone:'procedimientos' },
+  { id:'s17', text:'SG-Móviles',                                               zone:'procedimientos' },
+  { id:'s18', text:'SG- EPIs',                                                 zone:'proteccion' },
+];
+
+const hazards = [
+  { id:'h1',  text:'A1- Manipulación manual de cargas',                zone:'A' },
+  { id:'h2',  text:'A2- Posturas forzadas',                            zone:'A' },
+  { id:'h3',  text:'A3- Movimientos repetitivos',                      zone:'A' },
+  { id:'h4',  text:'A4- Trabajos nocturnos',                           zone:'A' },
+  { id:'h5',  text:'A5- Trabajo a turnos',                             zone:'A' },
+  { id:'h6',  text:'A6- Trabajos en aislamiento',                      zone:'A' },
+  { id:'h7',  text:'A7- Estrés laboral',                               zone:'A' },
+  { id:'h8',  text:'B1- Exposición a agentes químicos (higiene)',      zone:'BC' },
+  { id:'h9',  text:'B2- Exposición a agentes biológicos',              zone:'BC' },
+  { id:'h10', text:'C1- Agentes físicos/vibraciones',                  zone:'BC' },
+  { id:'h11', text:'C2- Agentes físicos/Ruido',                        zone:'BC' },
+  { id:'h12', text:'C3- Agentes físicos/Temperaturas extremas',        zone:'BC' },
+  { id:'h13', text:'C4- Agentes físicos/Iluminación',                  zone:'BC' },
+  { id:'h14', text:'C5- Agentes físicos/Radiaciones',                  zone:'BC' },
+  { id:'h15', text:'C6- Agentes físicos/Entorno',                      zone:'BC' },
+  { id:'h16', text:'C7- Agentes físicos/Condiciones climáticas',       zone:'BC' },
+  { id:'h17', text:'D1- Caídas al mismo nivel',                        zone:'D' },
+  { id:'h18', text:'D2- Caídas a distinto nivel',                      zone:'D' },
+  { id:'h19', text:'D3- Caída de objetos',                             zone:'D' },
+  { id:'h20', text:'E1- Contactos eléctricos',                         zone:'EF' },
+  { id:'h21', text:'E2- Incendio y/o explosión',                       zone:'EF' },
+  { id:'h22', text:'F1- Corte con objetos (cortes, pinchazos, etc.)',  zone:'EF' },
+  { id:'h23', text:'F2- Atrapamientos',                                zone:'EF' },
+  { id:'h24', text:'F3- Golpes con objetos (móviles e inmóviles)',     zone:'EF' },
+  { id:'h25', text:'F4- Contacto con sustancias químicas',             zone:'EF' },
+  { id:'h26', text:'F5- Contactos térmicos',                           zone:'EF' },
+  { id:'h27', text:'F6- Proyección de partículas',                     zone:'EF' },
+  { id:'h28', text:'G1- Atropellos',                                   zone:'G' },
+  { id:'h29', text:'G2- Accidentes de circulación (choques, vuelcos)', zone:'G' },
+  { id:'h30', text:'H1- Agresiones',                                   zone:'H' },
+  { id:'h31', text:'H2- Causas naturales (embolia, infarto, etc.)',    zone:'H' },
+  { id:'h32', text:'H3- Accidentes causados por seres vivos',          zone:'H' },
+];
+
+// ── STATE ──────────────────────────────────────────────────────────────
+let draggedId   = null;   // store ID only, not DOM reference
+let draggedType = null;
+let stdPlaced   = 0;
+let hazPlaced   = 0;
+let dropping    = false;  // guard against re-entrant drop calls
+
+// ── BUILD ──────────────────────────────────────────────────────────────
+function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
+
+function buildPool(items, poolId, type) {
+  const pool = document.getElementById(poolId);
+  pool.innerHTML = '';
+  shuffle(items).forEach(item => pool.appendChild(makeCard(item, type)));
+}
+
+function makeCard(item, type) {
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.id = 'card-' + item.id;
+  card.draggable = true;
+  card.dataset.id   = item.id;
+  card.dataset.zone = item.zone;
+  card.dataset.type = type;
+  card.innerHTML    = `<span class="check-icon">✓</span><span>${item.text}</span>`;
+  card.addEventListener('dragstart', onDragStart);
+  card.addEventListener('dragend',   onDragEnd);
+  return card;
+}
+
+// ── DRAG HANDLERS ──────────────────────────────────────────────────────
+function onDragStart(e) {
+  const card = e.currentTarget;
+  if (card.classList.contains('placed')) { e.preventDefault(); return; }
+  draggedId   = card.dataset.id;
+  draggedType = card.dataset.type;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', draggedId); // required for Firefox
+  setTimeout(() => {
+    const el = document.getElementById('card-' + draggedId);
+    if (el) el.classList.add('dragging');
+  }, 0);
+}
+
+function onDragEnd(e) {
+  // Always clean up dragging class — safe even if card moved
+  if (draggedId) {
+    const el = document.getElementById('card-' + draggedId);
+    if (el) el.classList.remove('dragging');
+  }
+  // Only reset if a drop didn't already clear it
+  if (!dropping) {
+    draggedId   = null;
+    draggedType = null;
+  }
+}
+
+function dragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  e.currentTarget.classList.add('drag-over');
+}
+
+function dragLeave(e) {
+  e.currentTarget.classList.remove('drag-over');
+}
+
+function drop(e, type) {
+  e.preventDefault();
+  e.stopPropagation();
+  const zone = e.currentTarget;
+  zone.classList.remove('drag-over');
+
+  // Guard: no card being dragged, wrong type, or re-entrant call
+  if (!draggedId || draggedType !== type || dropping) return;
+
+  const card = document.getElementById('card-' + draggedId);
+  if (!card || card.classList.contains('placed')) return;
+
+  dropping = true; // lock against re-entrant drop
+
+  const correctZone = card.dataset.zone;
+  const droppedZone = zone.dataset.zone;
+
+  if (correctZone === droppedZone) {
+    // ✅ Correct placement
+    playCorrect();
+    zone.appendChild(card);
+    card.classList.add('placed');
+    card.draggable = false;
+    zone.classList.add('flash-correct');
+    setTimeout(() => zone.classList.remove('flash-correct'), 500);
+
+    if (type === 'std') {
+      stdPlaced++;
+      document.getElementById('std-score').textContent = stdPlaced;
+      document.getElementById('std-progress').style.width = (stdPlaced / standards.length * 100) + '%';
+      if (stdPlaced === standards.length) {
+        setTimeout(() => { playCelebration(); document.getElementById('std-complete').classList.add('show'); }, 400);
+      }
+    } else {
+      hazPlaced++;
+      document.getElementById('haz-score').textContent = hazPlaced;
+      document.getElementById('haz-progress').style.width = (hazPlaced / hazards.length * 100) + '%';
+      if (hazPlaced === hazards.length) {
+        setTimeout(() => { playCelebration(); document.getElementById('haz-complete').classList.add('show'); }, 400);
+      }
+    }
+  } else {
+    // ❌ Wrong — send back to pool
+    playWrong();
+    zone.classList.add('flash-wrong');
+    setTimeout(() => zone.classList.remove('flash-wrong'), 400);
+
+    const pool = document.getElementById(type === 'std' ? 'std-pool' : 'haz-pool');
+    card.classList.remove('dragging');
+    pool.appendChild(card);
+    card.classList.add('bounce-back');
+    setTimeout(() => card.classList.remove('bounce-back'), 400);
+  }
+
+  // Clear state after a short delay so dragend fires cleanly
+  const clearedId = draggedId;
+  draggedId   = null;
+  draggedType = null;
+  setTimeout(() => { dropping = false; }, 50);
+}
+
+// ── RESET ──────────────────────────────────────────────────────────────
+function clearZones(zoneIds) {
+  zoneIds.forEach(id => {
+    const zone = document.getElementById(id);
+    if (!zone) return;
+    const label = zone.querySelector('.zone-label');
+    zone.innerHTML = '';
+    if (label) zone.appendChild(label);
+  });
+}
+
+function resetStandards() {
+  stdPlaced = 0;
+  draggedId = null; draggedType = null; dropping = false;
+  document.getElementById('std-score').textContent    = '0';
+  document.getElementById('std-progress').style.width = '0%';
+  document.getElementById('std-complete').classList.remove('show');
+  clearZones(['zone-std-entorno','zone-std-equipos','zone-std-procedimientos','zone-std-proteccion']);
+  buildPool(standards, 'std-pool', 'std');
+}
+
+function resetHazards() {
+  hazPlaced = 0;
+  draggedId = null; draggedType = null; dropping = false;
+  document.getElementById('haz-score').textContent    = '0';
+  document.getElementById('haz-progress').style.width = '0%';
+  document.getElementById('haz-complete').classList.remove('show');
+  clearZones(['zone-haz-A','zone-haz-BC','zone-haz-D','zone-haz-EF','zone-haz-G','zone-haz-H']);
+  buildPool(hazards, 'haz-pool', 'haz');
+}
+
+// ── TABS ───────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.getElementById('panel-standards').classList.toggle('active', tab === 'standards');
+  document.getElementById('panel-hazards').classList.toggle('active', tab === 'hazards');
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    t.classList.toggle('active-tab', (i === 0 && tab === 'standards') || (i === 1 && tab === 'hazards'));
+  });
+}
+
+// ── START ──────────────────────────────────────────────────────────────
+buildPool(standards, 'std-pool', 'std');
+buildPool(hazards,   'haz-pool', 'haz');
+</script>
+
+<div id="access-code-box" style="display:none; margin-top:30px; padding:20px; background:#ffffff; border-radius:12px; border-left:6px solid #4DB8A4; font-family:Segoe UI,Arial;">
+  <h3 style="margin-bottom:10px;">Actividad completada</h3>
+  <p>Introduce este código en la plataforma para continuar con el módulo:</p>
+  <div style="font-size:22px;font-weight:700;letter-spacing:2px;color:#1B2A4A;margin-top:8px;">A9X7‑Q2L4</div>
+</div>
+
+<script>
+function checkActivityCompletion(){
+  const stdDone = document.getElementById('std-complete')?.classList.contains('show');
+  const hazDone = document.getElementById('haz-complete')?.classList.contains('show');
+  if(stdDone && hazDone){
+      document.getElementById('access-code-box').style.display = 'block';
+  }
+}
+setInterval(checkActivityCompletion,500);
+</script>
+
+</body>
+</html>
