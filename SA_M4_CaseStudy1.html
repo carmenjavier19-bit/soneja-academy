@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Módulo 4 · Caso Práctico · Los 5 Por Qués</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-height: 100vh; padding: 24px; }
+
+  .header {
+    background: linear-gradient(135deg, #1B2A4A 0%, #2C4A7A 100%);
+    color: white; border-radius: 16px; padding: 28px 32px; margin-bottom: 24px;
+  }
+  .header-label { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #4DB8A4; margin-bottom: 8px; }
+  .header h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+  .header p { font-size: 13px; color: #a0b4cc; line-height: 1.5; }
+
+  /* PROGRESS STEPS */
+  .steps-bar {
+    background: white; border-radius: 12px; padding: 16px 24px;
+    margin-bottom: 24px; display: flex; align-items: center; gap: 0;
+  }
+  .step-item {
+    display: flex; align-items: center; flex: 1;
+  }
+  .step-circle {
+    width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; transition: all 0.3s;
+    background: #e0e8f0; color: #888;
+  }
+  .step-circle.active { background: #1B2A4A; color: white; transform: scale(1.1); }
+  .step-circle.done { background: #4DB8A4; color: white; }
+  .step-line { flex: 1; height: 2px; background: #e0e8f0; margin: 0 4px; }
+  .step-line.done { background: #4DB8A4; }
+  .step-label { font-size: 10px; color: #888; text-align: center; margin-top: 4px; letter-spacing: 0.5px; display: none; }
+
+  /* CARDS */
+  .card {
+    background: white; border-radius: 16px; padding: 28px;
+    margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+  .card-title {
+    font-size: 13px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1.5px; color: #4DB8A4; margin-bottom: 12px;
+  }
+
+  /* INCIDENT BOX */
+  .incident-box {
+    background: #fff8e1; border: 1px solid #ffe082; border-radius: 12px;
+    padding: 20px 24px; margin-bottom: 20px;
+  }
+  .incident-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; color: #f57f17; text-transform: uppercase; margin-bottom: 10px; }
+  .incident-text { font-size: 14px; color: #1B2A4A; line-height: 1.8; }
+
+  /* FACT BOX */
+  .facts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-top: 16px; }
+  .fact-item {
+    background: #f0f4f8; border-radius: 10px; padding: 14px 16px;
+    border-left: 3px solid #1B2A4A;
+  }
+  .fact-label { font-size: 10px; font-weight: 700; color: #888; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px; }
+  .fact-value { font-size: 13px; color: #1B2A4A; font-weight: 600; line-height: 1.4; }
+
+  /* WHY STEPS */
+  .why-chain { display: flex; flex-direction: column; gap: 0; }
+  .why-step {
+    display: grid; grid-template-columns: 48px 1fr; gap: 16px;
+    position: relative; padding-bottom: 20px;
+  }
+  .why-step:not(:last-child)::after {
+    content: ''; position: absolute; left: 23px; top: 48px;
+    width: 2px; height: calc(100% - 20px); background: #e0e8f0;
+  }
+  .why-step.answered:not(:last-child)::after { background: #4DB8A4; }
+
+  .why-num {
+    width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Segoe UI', Arial, sans-serif; font-size: 18px; font-weight: 800;
+    color: #888; background: #e0e8f0; border: 2px solid #d0d8e0;
+    position: relative; z-index: 1; transition: all 0.3s;
+  }
+  .why-step.active .why-num { background: #1B2A4A; color: white; border-color: #1B2A4A; }
+  .why-step.answered .why-num { background: #4DB8A4; color: white; border-color: #4DB8A4; }
+  .why-step.locked .why-num { opacity: 0.4; }
+
+  .why-content { padding-top: 10px; }
+  .why-question { font-size: 14px; font-weight: 700; color: #1B2A4A; margin-bottom: 4px; }
+  .why-context { font-size: 12px; color: #888; font-style: italic; margin-bottom: 12px; line-height: 1.5; }
+
+  /* OPTIONS */
+  .options-list { display: flex; flex-direction: column; gap: 8px; }
+  .option-btn {
+    background: white; border: 2px solid #e0e8f0; border-radius: 10px;
+    padding: 12px 16px; font-size: 13px; color: #1B2A4A; cursor: pointer;
+    text-align: left; transition: all 0.2s; font-family: 'Segoe UI', Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .option-btn:hover:not(:disabled) { border-color: #4DB8A4; background: #eaf9f5; }
+  .option-btn.selected-correct { border-color: #2e7d32; background: #e8f5e9; color: #1b5e20; pointer-events: none; }
+  .option-btn.selected-wrong { border-color: #c62828; background: #ffebee; color: #7f0000; pointer-events: none; animation: shake 0.4s ease; }
+  .option-btn.revealed-correct { border-color: #2e7d32; background: #f1f8f1; color: #2e7d32; pointer-events: none; }
+  .option-btn:disabled { opacity: 0.45; pointer-events: none; }
+  @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+
+  .why-feedback {
+    margin-top: 10px; border-radius: 8px; padding: 12px 16px;
+    font-size: 12px; line-height: 1.6; display: none;
+  }
+  .why-feedback.show { display: block; }
+  .why-feedback.correct { background: #e8f5e9; border: 1px solid #a5d6a7; color: #1b5e20; }
+  .why-feedback.wrong { background: #fff8e1; border: 1px solid #ffe082; color: #5c4000; }
+
+  .locked-msg { font-size: 12px; color: #aaa; font-style: italic; padding: 8px 0; }
+
+  /* CAUSAL CHAIN DISPLAY */
+  .chain-display {
+    background: #f0f4f8; border-radius: 12px; padding: 20px;
+    margin-bottom: 20px; display: none;
+  }
+  .chain-display.show { display: block; }
+  .chain-title { font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #888; margin-bottom: 16px; }
+  .chain-row { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+  .chain-badge {
+    font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 12px;
+    white-space: nowrap; flex-shrink: 0; margin-top: 2px;
+  }
+  .badge-immediate { background: #fff8e1; color: #f57f17; border: 1px solid #ffe082; }
+  .badge-underlying { background: #e3f2fd; color: #1565c0; border: 1px solid #90caf9; }
+  .badge-root { background: #fce4ec; color: #c62828; border: 1px solid #ef9a9a; }
+  .chain-text { font-size: 13px; color: #1B2A4A; line-height: 1.5; }
+
+  /* ROOT CAUSE BOX */
+  .root-cause-box {
+    background: linear-gradient(135deg, #1B2A4A, #2C4A7A);
+    color: white; border-radius: 14px; padding: 24px 28px; margin-bottom: 20px;
+    display: none;
+  }
+  .root-cause-box.show { display: block; animation: fadeInUp 0.5s ease; }
+  @keyframes fadeInUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  .root-cause-label { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #4DB8A4; margin-bottom: 8px; }
+  .root-cause-text { font-size: 16px; font-weight: 700; line-height: 1.5; margin-bottom: 16px; }
+  .corrective-title { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #a0b4cc; margin-bottom: 10px; }
+  .corrective-list { list-style: none; }
+  .corrective-list li { font-size: 13px; color: #d0dce8; padding: 6px 0; padding-left: 18px; position: relative; line-height: 1.5; }
+  .corrective-list li::before { content: '→'; position: absolute; left: 0; color: #4DB8A4; }
+
+  /* CONTRIBUTING FACTORS ACTIVITY */
+  .factors-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+  .factor-category {
+    background: #f0f4f8; border-radius: 10px; padding: 16px;
+  }
+  .factor-cat-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #1B2A4A; margin-bottom: 10px; }
+  .factor-check {
+    display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px;
+    cursor: pointer; padding: 6px 8px; border-radius: 6px; transition: background 0.15s;
+  }
+  .factor-check:hover { background: white; }
+  .factor-check input[type="checkbox"] { margin-top: 2px; accent-color: #1B2A4A; width: 15px; height: 15px; flex-shrink: 0; cursor: pointer; }
+  .factor-check label { font-size: 12px; color: #444; line-height: 1.5; cursor: pointer; }
+
+  .factors-feedback {
+    margin-top: 16px; border-radius: 10px; padding: 14px 18px;
+    font-size: 13px; line-height: 1.6; display: none;
+  }
+  .factors-feedback.show { display: block; }
+  .factors-feedback.good { background: #e8f5e9; border: 1px solid #a5d6a7; color: #1b5e20; }
+  .factors-feedback.ok { background: #fff8e1; border: 1px solid #ffe082; color: #5c4000; }
+
+  /* REFLECTION */
+  .reflection-list { list-style: none; margin-top: 16px; }
+  .reflection-list li {
+    display: flex; gap: 12px; padding: 12px 0;
+    border-bottom: 1px solid #f0f4f8; font-size: 13px; line-height: 1.6; color: #444;
+  }
+  .reflection-list li:last-child { border-bottom: none; }
+  .reflection-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+
+  /* BUTTONS */
+  .btn {
+    padding: 11px 24px; border-radius: 22px; font-size: 13px; font-weight: 700;
+    cursor: pointer; border: none; transition: all 0.2s; letter-spacing: 0.5px;
+  }
+  .btn-primary { background: #1B2A4A; color: white; }
+  .btn-primary:hover { background: #2C4A7A; transform: translateY(-1px); }
+  .btn-teal { background: #4DB8A4; color: white; }
+  .btn-teal:hover { background: #3a9a88; }
+
+  /* COMPLETION */
+  .completion-card {
+    background: linear-gradient(135deg, #1B2A4A, #2C4A7A);
+    color: white; border-radius: 16px; padding: 40px 32px;
+    text-align: center; display: none; margin-bottom: 20px;
+  }
+  .completion-card.show { display: block; animation: fadeInUp 0.5s ease; }
+  .completion-icon { font-size: 56px; margin-bottom: 12px; }
+  .completion-card h2 { font-size: 22px; margin-bottom: 8px; }
+  .completion-card p { color: #a0b4cc; font-size: 14px; line-height: 1.7; max-width: 480px; margin: 0 auto 24px; }
+
+  @media (max-width: 640px) {
+    .factors-grid { grid-template-columns: 1fr; }
+    .facts-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-label">Módulo 4 · Caso Práctico</div>
+  <h1>Análisis de un evento real con los 5 Por Qués</h1>
+  <p>Lee el evento, analiza los hechos y aplica la técnica de los 5 Por Qués paso a paso para identificar la causa raíz.</p>
+</div>
+
+<!-- PROGRESS -->
+<div class="steps-bar">
+  <div class="step-item">
+    <div class="step-circle active" id="sc-1">1</div>
+    <div class="step-line" id="sl-1"></div>
+  </div>
+  <div class="step-item">
+    <div class="step-circle" id="sc-2">2</div>
+    <div class="step-line" id="sl-2"></div>
+  </div>
+  <div class="step-item">
+    <div class="step-circle" id="sc-3">3</div>
+    <div class="step-line" id="sl-3"></div>
+  </div>
+  <div class="step-item">
+    <div class="step-circle" id="sc-4">4</div>
+    <div class="step-line" id="sl-4"></div>
+  </div>
+  <div class="step-item">
+    <div class="step-circle" id="sc-5">5</div>
+    <div class="step-line" id="sl-5" style="display:none"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PHASE 1 — THE INCIDENT -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div id="phase-1">
+  <div class="card">
+    <div class="card-title">El evento</div>
+    <div class="incident-box">
+      <div class="incident-label">📋 Descripción del incidente — IF3 · Primera cura</div>
+      <div class="incident-text">
+        Durante el turno de tarde del martes, un operario de la línea de producción de placas sufre un corte superficial en la mano izquierda mientras retira material acumulado en una cinta transportadora. La lesión requiere primera cura en el puesto médico. El operario estaba realizando una limpieza rutinaria de la cinta usando una espátula metálica. La línea estaba en marcha en el momento del incidente.
+      </div>
+    </div>
+
+    <div class="card-title">Datos recogidos en el lugar</div>
+    <div class="facts-grid">
+      <div class="fact-item">
+        <div class="fact-label">Quién</div>
+        <div class="fact-value">Operario con 8 meses en la planta. Turno de tarde.</div>
+      </div>
+      <div class="fact-item">
+        <div class="fact-label">Qué hacía</div>
+        <div class="fact-value">Limpieza rutinaria de acumulación de material en cinta transportadora.</div>
+      </div>
+      <div class="fact-item">
+        <div class="fact-label">Estado de la línea</div>
+        <div class="fact-value">En marcha. No se aplicó parada ni bloqueo previo.</div>
+      </div>
+      <div class="fact-item">
+        <div class="fact-label">EPIs llevados</div>
+        <div class="fact-value">Casco y calzado de seguridad. Sin guantes en el momento del incidente.</div>
+      </div>
+      <div class="fact-item">
+        <div class="fact-label">Herramienta usada</div>
+        <div class="fact-value">Espátula metálica de uso general. No es la herramienta específica para esta tarea.</div>
+      </div>
+      <div class="fact-item">
+        <div class="fact-label">Supervisión</div>
+        <div class="fact-value">El encargado de turno no estaba presente en la zona en ese momento.</div>
+      </div>
+    </div>
+
+    <div style="margin-top:24px; display:flex; justify-content:flex-end;">
+      <button class="btn btn-primary" onclick="goPhase(2)">Comenzar los 5 Por Qués →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PHASE 2 — THE 5 WHYS -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div id="phase-2" style="display:none">
+  <div class="card">
+    <div class="card-title">Los 5 Por Qués — aplica la técnica</div>
+    <p style="font-size:13px;color:#666;margin-bottom:24px;line-height:1.6">
+      Para cada pregunta, selecciona la respuesta que mejor refleja lo que los datos del evento nos indican. Si te equivocas, la respuesta correcta se revelará y podrás continuar.
+    </p>
+
+    <div class="why-chain" id="why-chain"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PHASE 3 — CAUSAL CHAIN SUMMARY -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div id="phase-3" style="display:none">
+  <div class="card">
+    <div class="card-title">La cadena causal — resumen</div>
+    <p style="font-size:13px;color:#666;margin-bottom:20px;line-height:1.6">Antes de revelar la causa raíz, repasa los tres niveles de causa que hemos identificado.</p>
+
+    <div class="chain-display show">
+      <div class="chain-title">De la causa inmediata a la causa raíz</div>
+      <div class="chain-row">
+        <span class="chain-badge badge-immediate">Causa inmediata</span>
+        <span class="chain-text">El operario se cortó la mano al retirar material de la cinta sin llevar guantes.</span>
+      </div>
+      <div class="chain-row">
+        <span class="chain-badge badge-underlying">Causa subyacente</span>
+        <span class="chain-text">La tarea se realizó con la línea en marcha, sin herramienta específica, y sin seguir ningún procedimiento de seguridad definido para esta operación.</span>
+      </div>
+      <div class="chain-row" id="root-row" style="display:none">
+        <span class="chain-badge badge-root">Causa raíz</span>
+        <span class="chain-text" id="root-text"></span>
+      </div>
+    </div>
+
+    <div id="root-cause-box" class="root-cause-box">
+      <div class="root-cause-label">Causa raíz identificada</div>
+      <div class="root-cause-text" id="root-cause-text"></div>
+      <div class="corrective-title">Acciones correctivas sobre la causa raíz</div>
+      <ul class="corrective-list" id="corrective-list"></ul>
+    </div>
+
+    <div id="phase3-btn" style="display:flex;justify-content:flex-end;margin-top:16px;display:none">
+      <button class="btn btn-primary" onclick="goPhase(4)">Continuar — Factores contributivos →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PHASE 4 — CONTRIBUTING FACTORS -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div id="phase-4" style="display:none">
+  <div class="card">
+    <div class="card-title">Factores contributivos</div>
+    <p style="font-size:13px;color:#666;margin-bottom:8px;line-height:1.6">
+      Además de la cadena principal de causas, ¿qué otros factores contribuyeron a que este evento fuera posible? Marca todos los que consideres aplicables a este caso.
+    </p>
+    <p style="font-size:12px;color:#4DB8A4;font-style:italic;margin-bottom:16px;">Pueden ser varios — no hay una única respuesta correcta.</p>
+
+    <div class="factors-grid">
+      <div class="factor-category">
+        <div class="factor-cat-title">👤 Factores humanos</div>
+        <label class="factor-check"><input type="checkbox" id="fc1"><label for="fc1">El operario tenía poca experiencia en la planta (8 meses)</label></label>
+        <label class="factor-check"><input type="checkbox" id="fc2"><label for="fc2">Exceso de confianza por tratarse de una tarea rutinaria</label></label>
+        <label class="factor-check"><input type="checkbox" id="fc3"><label for="fc3">Fatiga acumulada al final del turno de tarde</label></label>
+      </div>
+      <div class="factor-category">
+        <div class="factor-cat-title">🏭 Factores del entorno</div>
+        <label class="factor-check"><input type="checkbox" id="fc4"><label for="fc4">Acumulación de material en la cinta — condición conocida o recurrente</label></label>
+        <label class="factor-check"><input type="checkbox" id="fc5"><label for="fc5">Ausencia del encargado de turno en la zona en ese momento</label></label>
+        <label class="factor-check"><input type="checkbox" id="fc6"><label for="fc6">Ruido de la línea que dificultaba la comunicación</label></label>
+      </div>
+      <div class="factor-category">
+        <div class="factor-cat-title">🔧 Factores de equipo</div>
+        <label class="factor-check"><input type="checkbox" id="fc7"><label for="fc7">Uso de una herramienta genérica no específica para la tarea</label></label>
+        <label class="factor-check"><input type="checkbox" id="fc8"><label for="fc8">No existe herramienta específica disponible en el puesto</label></label>
+        <label class="factor-check"><input type="checkbox" id="fc9"><label for="fc9">La cinta no dispone de sistema de parada accesible desde el punto de limpieza</label></label>
+      </div>
+      <div class="factor-category">
+        <div class="factor-cat-title">🗂️ Factores organizativos</div>
+        <label class="factor-check"><input type="checkbox" id="fc10"><label for="fc10">No existe procedimiento documentado para esta tarea</label></label>
+        <label class="factor-check"><input type="checkbox" id="fc11"><label for="fc11">La tarea no estaba identificada como tarea con riesgo en la evaluación</label></label>
+        <label class="factor-check"><input type="checkbox" id="fc12"><label for="fc12">Presión implícita para no parar la línea durante el turno</label></label>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="checkFactors()">✓ Revisar selección</button>
+    </div>
+    <div id="factors-feedback" class="factors-feedback"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PHASE 5 — REFLECTION -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div id="phase-5" style="display:none">
+  <div class="card">
+    <div class="card-title">Reflexión final — errores de análisis frecuentes</div>
+    <p style="font-size:13px;color:#666;margin-bottom:8px;line-height:1.6">
+      Revisemos qué habría pasado si el análisis de este evento se hubiera detenido antes de llegar a la causa raíz.
+    </p>
+    <ul class="reflection-list">
+      <li>
+        <span class="reflection-icon">❌</span>
+        <div><strong>Si nos hubiéramos detenido en la causa inmediata:</strong> la acción correctiva habría sido "recordar al operario que use guantes." Resultado probable: el mismo accidente ocurre la semana siguiente con otro operario que tampoco conoce el procedimiento.</div>
+      </li>
+      <li>
+        <span class="reflection-icon">❌</span>
+        <div><strong>Si hubiéramos culpado a la persona:</strong> "el operario fue imprudente al no usar guantes." Pero los datos nos dicen que nunca se le formó sobre los riesgos específicos de esta tarea. El sistema lo puso en esa situación.</div>
+      </li>
+      <li>
+        <span class="reflection-icon">❌</span>
+        <div><strong>Si hubiéramos aceptado "falta de atención" como causa raíz:</strong> no habría llevado a ninguna acción estructural. ¿Por qué hubo falta de atención? Porque nunca nadie le explicó que esa tarea tenía riesgo y requería EPIs específicos y parada de línea.</div>
+      </li>
+      <li>
+        <span class="reflection-icon">✅</span>
+        <div><strong>Al llegar a la causa raíz:</strong> la acción correctiva crea un procedimiento documentado, forma a todos los operarios que realizan esta tarea, y define el EPI correcto y la obligatoriedad de parada de línea. Ningún operario futuro quedará sin esa formación.</div>
+      </li>
+    </ul>
+    <div style="margin-top:20px;background:#f0f4f8;border-radius:10px;padding:16px;border-left:3px solid #4DB8A4">
+      <p style="font-size:13px;color:#1B2A4A;font-style:italic;line-height:1.7">"El objetivo del análisis no es encontrar al culpable. Es encontrar la causa — y eliminarla."</p>
+    </div>
+    <div style="margin-top:24px;display:flex;justify-content:flex-end">
+      <button class="btn btn-teal" onclick="complete()">Finalizar caso práctico ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- COMPLETION -->
+<div id="completion" class="completion-card">
+  <div class="completion-icon">🎯</div>
+  <h2>Caso práctico completado</h2>
+  <p>Has identificado la causa raíz del evento, reconocido los factores contributivos, y comprendido por qué el análisis debe ir más allá de la causa inmediata. Estás listo para el cuestionario del Módulo 4.</p>
+  <button class="btn btn-teal" onclick="restart()">↺ Repetir el caso</button>
+</div>
+
+<script>
+// ── AUDIO ──────────────────────────────────────────────────────────────
+let audioCtx = null;
+function getCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+function playTone(freqs, type, vol, dur) {
+  try {
+    const ctx = getCtx();
+    if (ctx.state === 'suspended') ctx.resume();
+    freqs.forEach((f, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = type; o.frequency.value = f;
+      const t = ctx.currentTime + i * 0.12;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(vol, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.start(t); o.stop(t + dur + 0.05);
+    });
+  } catch(e) {}
+}
+function playCorrect()    { playTone([523.25, 783.99], 'sine', 0.20, 0.35); }
+function playWrong()      { playTone([180], 'sawtooth', 0.14, 0.22); }
+function playCelebrate()  { playTone([523.25, 659.25, 783.99, 1046.5], 'sine', 0.18, 0.45); }
+document.addEventListener('mousedown', () => {
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}, { once: true });
+
+// ── DATA ───────────────────────────────────────────────────────────────
+const whys = [
+  {
+    question: '¿Por qué se lesionó el operario?',
+    context: 'Observa los hechos: qué estaba haciendo y qué protección llevaba en ese momento.',
+    options: [
+      { text: 'Porque no estaba prestando atención a lo que hacía.', correct: false, feedback: 'La falta de atención describe el comportamiento, no la causa. ¿Por qué no tenía protección? El análisis debe ir más allá del comportamiento observable.' },
+      { text: 'Porque se cortó con el borde de la cinta al retirar material sin llevar guantes.', correct: true, feedback: 'Correcto. Esta es la causa inmediata: el contacto directo con una superficie cortante sin protección adecuada. Ahora hay que preguntarse por qué no llevaba guantes.' },
+      { text: 'Porque la línea estaba mal diseñada.', correct: false, feedback: 'El diseño de la línea puede ser un factor contributivo, pero no es la causa inmediata de la lesión. La causa inmediata es lo que desencadenó directamente el evento.' },
+    ]
+  },
+  {
+    question: '¿Por qué no llevaba guantes?',
+    context: 'Revisa los datos: ¿se menciona algo sobre los EPIs disponibles o la tarea que estaba realizando?',
+    options: [
+      { text: 'Porque se los olvidó ese día.', correct: false, feedback: 'Atribuir el evento a un olvido individual no lleva a ninguna acción correctiva estructural. Los datos no mencionan olvido — mencionan que no era la herramienta correcta para la tarea y que la línea estaba en marcha.' },
+      { text: 'Porque la tarea de limpieza de cinta no estaba identificada como tarea de riesgo que requiriera guantes específicos y parada de línea.', correct: true, feedback: 'Correcto. No había un procedimiento que definiera los EPIs requeridos ni la necesidad de parar la línea para esta operación. Sigamos.' },
+      { text: 'Porque los guantes disponibles eran incómodos.', correct: false, feedback: 'Los datos no mencionan incomodidad. Y aunque así fuera, eso sería otro nivel de análisis. La pregunta clave aquí es si alguien le indicó que debía usarlos para esta tarea.' },
+    ]
+  },
+  {
+    question: '¿Por qué la tarea no estaba identificada como tarea de riesgo?',
+    context: 'Piensa en lo que debería existir para que una tarea rutinaria de planta esté identificada como tarea con riesgo.',
+    options: [
+      { text: 'Porque nadie había pensado en ello antes.', correct: false, feedback: 'Esta respuesta no es lo suficientemente específica para generar una acción correctiva. ¿Qué sistema debería haber identificado este riesgo?' },
+      { text: 'Porque no existe un procedimiento documentado para la limpieza de cintas transportadoras en marcha.', correct: true, feedback: 'Exacto. Sin un procedimiento documentado, no hay instrucción de trabajo que defina los riesgos, los EPIs necesarios y los pasos seguros para realizar esta tarea. Seguimos.' },
+      { text: 'Porque el operario no preguntó a su encargado.', correct: false, feedback: 'Culpar al operario por no preguntar no es un análisis causal. La responsabilidad de definir procedimientos seguros recae en el sistema, no en el trabajador individual.' },
+    ]
+  },
+  {
+    question: '¿Por qué no existe ese procedimiento?',
+    context: 'Esta pregunta busca entender el fallo de sistema o de organización que permitió que no existiera.',
+    options: [
+      { text: 'Porque nadie en la planta conocía el riesgo de esta tarea.', correct: false, feedback: 'Los datos sugieren que sí existe conocimiento del riesgo — por eso hay guantes disponibles en planta. La pregunta es por qué ese conocimiento no se convirtió en un procedimiento documentado.' },
+      { text: 'Porque esta tarea no estaba incluida en la evaluación de riesgos ni en el inventario de tareas críticas de la línea.', correct: true, feedback: 'Correcto. La tarea de limpieza de cintas en marcha no había sido evaluada como tarea crítica, por lo que nunca se documentó un procedimiento específico. Una pregunta más.' },
+      { text: 'Porque la tarea es demasiado sencilla para necesitar procedimiento.', correct: false, feedback: 'La percepción de que una tarea es "sencilla" es uno de los factores de riesgo más comunes. Las tareas rutinarias generan confianza excesiva — y los datos del caso confirman que sí existe riesgo.' },
+    ]
+  },
+  {
+    question: '¿Por qué esta tarea no estaba en la evaluación de riesgos?',
+    context: 'Esta es la última pregunta. Busca el fallo más profundo — el que, si se corrige, evitará que toda esta cadena vuelva a producirse.',
+    options: [
+      { text: 'Porque la evaluación de riesgos de la línea no incluye todas las tareas de mantenimiento rutinario y limpieza que realizan los operarios durante la producción.', correct: true, feedback: '¡Causa raíz identificada! La evaluación de riesgos de la línea tiene un alcance insuficiente: no cubre las tareas de mantenimiento rutinario realizadas por operarios durante la producción. Esto es lo que hay que corregir.' },
+      { text: 'Porque el técnico de PRL no visitó esa línea.', correct: false, feedback: 'Culpar a una persona concreta no es una causa raíz. La pregunta es qué fallo del sistema permitió que esa línea no tuviera una evaluación de riesgos completa.' },
+      { text: 'Porque la línea es nueva y no da tiempo a evaluar todos los riesgos.', correct: false, feedback: 'Los datos no indican que la línea sea nueva. Y aunque lo fuera, eso no sería una causa raíz sino una circunstancia — la causa raíz sería la ausencia de un proceso de evaluación de riesgos en el arranque de nuevas líneas.' },
+    ]
+  }
+];
+
+const rootCause = 'La evaluación de riesgos de la línea de producción no cubre las tareas de mantenimiento rutinario y limpieza realizadas por operarios durante la producción, lo que impide identificar los riesgos asociados y definir procedimientos seguros para realizarlas.';
+
+const correctiveActions = [
+  'Ampliar la evaluación de riesgos de todas las líneas de producción para incluir explícitamente las tareas de limpieza y mantenimiento rutinario realizadas por operarios.',
+  'Documentar un procedimiento específico para la limpieza de cintas transportadoras: parada y bloqueo de línea previo, EPIs requeridos (guantes anticorte), herramienta específica.',
+  'Identificar si existen otras tareas similares en la planta que tampoco estén cubiertas por procedimiento.',
+  'Incluir estas tareas en el programa de formación de operarios de nueva incorporación.',
+];
+
+// ── STATE ──────────────────────────────────────────────────────────────
+let currentWhy = 0;
+let whyResults = [];
+let currentPhase = 1;
+
+// ── PHASE NAVIGATION ──────────────────────────────────────────────────
+function goPhase(n) {
+  document.getElementById('phase-' + currentPhase).style.display = 'none';
+  currentPhase = n;
+  document.getElementById('phase-' + n).style.display = 'block';
+  updateProgress(n);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (n === 2) renderWhyChain();
+  if (n === 3) showCausalChain();
+}
+
+function updateProgress(phase) {
+  [1,2,3,4,5].forEach(i => {
+    const sc = document.getElementById('sc-' + i);
+    const sl = document.getElementById('sl-' + i);
+    sc.className = 'step-circle' + (i < phase ? ' done' : i === phase ? ' active' : '');
+    if (sl) sl.className = 'step-line' + (i < phase ? ' done' : '');
+  });
+}
+
+// ── WHY CHAIN ─────────────────────────────────────────────────────────
+function renderWhyChain() {
+  const container = document.getElementById('why-chain');
+  container.innerHTML = '';
+  whys.forEach((why, idx) => {
+    const step = document.createElement('div');
+    step.className = 'why-step' + (idx === 0 ? ' active' : ' locked');
+    step.id = 'why-step-' + idx;
+
+    const optionsHTML = why.options.map((opt, oi) =>
+      `<button class="option-btn" id="opt-${idx}-${oi}" onclick="selectOption(${idx},${oi})">${opt.text}</button>`
+    ).join('');
+
+    step.innerHTML = `
+      <div class="why-num">${idx + 1}</div>
+      <div class="why-content">
+        <div class="why-question">Por qué ${idx + 1}: ${why.question}</div>
+        <div class="why-context">${why.context}</div>
+        <div class="options-list" id="options-${idx}">
+          ${idx === 0 ? optionsHTML : `<div class="locked-msg">Se desbloqueará cuando respondas la pregunta anterior.</div>`}
+        </div>
+        <div class="why-feedback" id="fb-${idx}"></div>
+      </div>`;
+    container.appendChild(step);
+  });
+}
+
+function selectOption(whyIdx, optIdx) {
+  if (whyIdx !== currentWhy) return;
+  const why = whys[whyIdx];
+  const opt = why.options[optIdx];
+  const fb  = document.getElementById('fb-' + whyIdx);
+  const allBtns = document.querySelectorAll(`[id^="opt-${whyIdx}-"]`);
+
+  allBtns.forEach(b => b.disabled = true);
+
+  const clickedBtn = document.getElementById(`opt-${whyIdx}-${optIdx}`);
+
+  if (opt.correct) {
+    playCorrect();
+    clickedBtn.className = 'option-btn selected-correct';
+    fb.className = 'why-feedback show correct';
+    fb.innerHTML = '✅ ' + opt.feedback;
+    document.getElementById('why-step-' + whyIdx).className = 'why-step answered';
+    whyResults.push(true);
+    setTimeout(() => unlockNext(whyIdx), 1800);
+  } else {
+    playWrong();
+    clickedBtn.className = 'option-btn selected-wrong';
+    fb.className = 'why-feedback show wrong';
+    fb.innerHTML = '⚠️ ' + opt.feedback;
+    whyResults.push(false);
+    // Reveal correct answer
+    why.options.forEach((o, i) => {
+      if (o.correct) {
+        document.getElementById(`opt-${whyIdx}-${i}`).className = 'option-btn revealed-correct';
+      }
+    });
+    setTimeout(() => unlockNext(whyIdx), 2800);
+  }
+}
+
+function unlockNext(whyIdx) {
+  const next = whyIdx + 1;
+  if (next < whys.length) {
+    currentWhy = next;
+    const nextStep = document.getElementById('why-step-' + next);
+    nextStep.className = 'why-step active';
+    const optContainer = document.getElementById('options-' + next);
+    optContainer.innerHTML = whys[next].options.map((opt, oi) =>
+      `<button class="option-btn" id="opt-${next}-${oi}" onclick="selectOption(${next},${oi})">${opt.text}</button>`
+    ).join('');
+    nextStep.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  } else {
+    // All 5 whys done
+    playCelebrate();
+    setTimeout(() => goPhase(3), 600);
+  }
+}
+
+// ── CAUSAL CHAIN ──────────────────────────────────────────────────────
+function showCausalChain() {
+  // Reveal root cause row after short delay
+  setTimeout(() => {
+    document.getElementById('root-row').style.display = 'flex';
+    document.getElementById('root-text').textContent = rootCause;
+  }, 800);
+
+  setTimeout(() => {
+    const box = document.getElementById('root-cause-box');
+    box.classList.add('show');
+    document.getElementById('root-cause-text').textContent = rootCause;
+    const list = document.getElementById('corrective-list');
+    list.innerHTML = correctiveActions.map(a => `<li>${a}</li>`).join('');
+    playCelebrate();
+  }, 1800);
+
+  setTimeout(() => {
+    const btn = document.getElementById('phase3-btn');
+    btn.style.display = 'flex';
+    btn.style.justifyContent = 'flex-end';
+  }, 2600);
+}
+
+// ── CONTRIBUTING FACTORS ───────────────────────────────────────────────
+// Expected: fc1, fc2, fc4, fc5, fc7, fc8, fc10, fc11 are clearly supported by data
+// fc3, fc6, fc9, fc12 are plausible but not directly evidenced
+const expectedFactors = ['fc1','fc2','fc4','fc5','fc7','fc8','fc10','fc11'];
+const plausibleFactors = ['fc3','fc6','fc9','fc12'];
+
+function checkFactors() {
+  const checked = [];
+  for (let i = 1; i <= 12; i++) {
+    if (document.getElementById('fc' + i).checked) checked.push('fc' + i);
+  }
+  if (checked.length === 0) {
+    alert('Selecciona al menos un factor contributivo antes de revisar.');
+    return;
+  }
+
+  const hitExpected = checked.filter(f => expectedFactors.includes(f)).length;
+  const hitPlausible = checked.filter(f => plausibleFactors.includes(f)).length;
+  const wrongPicks = checked.filter(f => !expectedFactors.includes(f) && !plausibleFactors.includes(f)).length;
+
+  const fb = document.getElementById('factors-feedback');
+  fb.classList.add('show');
+
+  if (hitExpected >= 5 && wrongPicks === 0) {
+    playCorrect();
+    fb.className = 'factors-feedback show good';
+    fb.innerHTML = `✅ <strong>Buen análisis.</strong> Has identificado los factores más respaldados por los datos del caso. Los factores organizativos (ausencia de procedimiento y evaluación de riesgos incompleta) y los de equipo (herramienta inadecuada) son especialmente relevantes porque están directamente vinculados a la causa raíz. ${hitPlausible > 0 ? 'Los factores adicionales que has marcado (fatiga, ruido, etc.) son plausibles aunque los datos no los confirman directamente.' : ''}`;
+  } else {
+    playWrong();
+    fb.className = 'factors-feedback show ok';
+    fb.innerHTML = `⚠️ Has marcado ${checked.length} factor(es). Los más directamente respaldados por los datos son: la poca experiencia del operario, la acumulación de material como condición recurrente, la ausencia del encargado, el uso de herramienta genérica, la inexistencia de herramienta específica, y la ausencia de procedimiento y de evaluación de riesgos completa. Revisa tu selección y compara con los datos del caso.`;
+  }
+
+  setTimeout(() => {
+    document.querySelector('#phase-4 .btn-primary').textContent = 'Continuar →';
+    document.querySelector('#phase-4 .btn-primary').onclick = () => goPhase(5);
+  }, 1000);
+}
+
+// ── COMPLETION ────────────────────────────────────────────────────────
+function complete() {
+  document.getElementById('phase-5').style.display = 'none';
+  document.getElementById('completion').classList.add('show');
+  updateProgress(6);
+  playCelebrate();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function restart() {
+  currentWhy = 0; whyResults = []; currentPhase = 1;
+  document.getElementById('completion').classList.remove('show');
+  [2,3,4,5].forEach(i => document.getElementById('phase-' + i).style.display = 'none');
+  document.getElementById('root-row').style.display = 'none';
+  document.getElementById('root-cause-box').classList.remove('show');
+  document.getElementById('phase3-btn').style.display = 'none';
+  document.getElementById('factors-feedback').classList.remove('show');
+  document.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked = false);
+  document.getElementById('phase-1').style.display = 'block';
+  updateProgress(1);
+}
+</script>
+</body>
+</html>
