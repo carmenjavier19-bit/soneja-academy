@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Módulo 3 · Actividad 2 · Clasifica eventos reales</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #f0f4f8;
+    min-height: 100vh;
+    padding: 24px;
+  }
+
+  .header {
+    background: linear-gradient(135deg, #1B2A4A 0%, #2C4A7A 100%);
+    color: white;
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin-bottom: 24px;
+  }
+  .header-label { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #4DB8A4; margin-bottom: 8px; }
+  .header h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+  .header p { font-size: 13px; color: #a0b4cc; line-height: 1.5; }
+
+  .progress-bar {
+    background: white;
+    border-radius: 12px;
+    padding: 16px 24px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .progress-dots { display: flex; gap: 8px; }
+  .dot {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: #e0e8f0;
+    color: #888;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+  }
+  .dot.current { background: #1B2A4A; color: white; transform: scale(1.1); }
+  .dot.done { background: #4DB8A4; color: white; }
+  .dot.wrong { background: #ef5350; color: white; }
+  .progress-label { font-size: 13px; color: #666; margin-left: auto; }
+
+  .event-card {
+    background: white;
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+
+  .event-num {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #4DB8A4;
+    margin-bottom: 10px;
+  }
+
+  .event-scenario {
+    background: #f0f4f8;
+    border-left: 4px solid #1B2A4A;
+    border-radius: 0 10px 10px 0;
+    padding: 16px 20px;
+    font-size: 14px;
+    color: #1B2A4A;
+    line-height: 1.7;
+    margin-bottom: 24px;
+    font-style: italic;
+  }
+
+  .question-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 16px;
+  }
+
+  .question-block label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #1B2A4A;
+    margin-bottom: 8px;
+  }
+
+  .select-wrapper { position: relative; }
+  select {
+    width: 100%;
+    padding: 12px 36px 12px 14px;
+    border: 2px solid #c0cdd8;
+    border-radius: 10px;
+    font-size: 13px;
+    color: #1B2A4A;
+    background: white;
+    appearance: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    font-family: 'Segoe UI', Arial, sans-serif;
+  }
+  select:focus { outline: none; border-color: #4DB8A4; }
+  select.correct { border-color: #2e7d32; background: #e8f5e9; }
+  select.incorrect { border-color: #c62828; background: #ffebee; }
+  .select-arrow {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: #888;
+    font-size: 12px;
+  }
+
+  .hint-btn {
+    background: none;
+    border: 1px solid #c0cdd8;
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 11px;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .hint-btn:hover { background: #f0f4f8; border-color: #4DB8A4; color: #4DB8A4; }
+
+  .hint-box {
+    background: #fff8e1;
+    border: 1px solid #ffe082;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: #5c4a00;
+    margin-top: 10px;
+    display: none;
+    line-height: 1.5;
+  }
+  .hint-box.show { display: block; }
+
+  .feedback-box {
+    border-radius: 10px;
+    padding: 14px 18px;
+    font-size: 13px;
+    line-height: 1.6;
+    margin-top: 14px;
+    display: none;
+  }
+  .feedback-box.show { display: block; }
+  .feedback-box.success { background: #e8f5e9; border: 1px solid #a5d6a7; color: #1b5e20; }
+  .feedback-box.partial { background: #fff8e1; border: 1px solid #ffe082; color: #5c4000; }
+  .feedback-box.error { background: #ffebee; border: 1px solid #ef9a9a; color: #7f0000; }
+
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    padding: 11px 24px;
+    border-radius: 22px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+  .btn-primary { background: #1B2A4A; color: white; }
+  .btn-primary:hover { background: #2C4A7A; }
+  .btn-secondary { background: white; color: #1B2A4A; border: 2px solid #1B2A4A; }
+  .btn-secondary:hover { background: #f0f4f8; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .final-screen {
+    background: white;
+    border-radius: 16px;
+    padding: 48px 32px;
+    text-align: center;
+    display: none;
+  }
+  .final-screen.show { display: block; }
+  .final-icon { font-size: 64px; margin-bottom: 16px; }
+  .final-score { font-size: 48px; font-weight: 800; color: #1B2A4A; margin-bottom: 8px; }
+  .final-label { font-size: 14px; color: #888; margin-bottom: 24px; }
+  .final-msg { font-size: 15px; color: #444; line-height: 1.7; margin-bottom: 24px; max-width: 480px; margin-left: auto; margin-right: auto; }
+
+  .answer-reveal {
+    background: #f0f4f8;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: #444;
+    margin-top: 8px;
+    display: none;
+  }
+  .answer-reveal.show { display: block; }
+  .answer-reveal strong { color: #1B2A4A; }
+
+  @media (max-width: 600px) {
+    .question-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-label">Módulo 3 · Actividad 2 de 2</div>
+  <h1>Clasifica los eventos: estándar SG y tipo de peligro</h1>
+  <p>Lee cada situación detectada en planta y selecciona el estándar SG y el tipo de peligro que mejor corresponden.</p>
+</div>
+
+<div class="progress-bar">
+  <div class="progress-dots">
+    <div class="dot current" id="dot-1">1</div>
+    <div class="dot" id="dot-2">2</div>
+    <div class="dot" id="dot-3">3</div>
+    <div class="dot" id="dot-4">4</div>
+    <div class="dot" id="dot-5">5</div>
+  </div>
+  <div class="progress-label" id="progress-label">Evento 1 de 5</div>
+</div>
+
+<div id="event-container"></div>
+<div id="final-screen" class="final-screen"></div>
+
+<script>
+// ── AUDIO ──────────────────────────────────────────────────────────────
+let audioCtx = null;
+function getCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+function playTone(freqs, type, vol, duration) {
+  try {
+    const ctx = getCtx();
+    if (ctx.state === 'suspended') ctx.resume();
+    freqs.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = type;
+      osc.frequency.value = freq;
+      const t = ctx.currentTime + i * 0.12;
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(vol, t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+      osc.start(t);
+      osc.stop(t + duration + 0.05);
+    });
+  } catch(e) { /* audio not critical */ }
+}
+// Both correct → two-note ascending chime
+function playBothCorrect()  { playTone([523.25, 783.99], 'sine', 0.22, 0.38); }
+// One correct → single neutral note
+function playPartialCorrect() { playTone([440], 'sine', 0.18, 0.32); }
+// Both wrong → low buzz
+function playBothWrong()    { playTone([180], 'sawtooth', 0.15, 0.25); }
+// Final celebration → rising arpeggio
+function playCelebration()  { playTone([523.25, 659.25, 783.99, 1046.5], 'sine', 0.20, 0.45); }
+
+// Resume on first interaction
+document.addEventListener('mousedown', () => {
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}, { once: true });
+
+// ──────────────────────────────────────────────────────────────────────
+const events = [
+  {
+    num: 1,
+    scenario: "Un operario está descargando sacos de yeso de un palé. Al levantar un saco de 25 kg con el torso girado, siente un pinchazo en la zona lumbar.",
+    hazard: "A1- Manipulación manual de cargas",
+    standard: "SG- Evaluación de riesgos",
+    hint: "Piensa en el esfuerzo físico y la postura adoptada durante la tarea. ¿Qué tipo de peligro ergonómico se describe?",
+    feedbackOk: "Correcto. La manipulación manual de cargas con el torso girado es un riesgo ergonómico (A1) que se enmarca dentro de la evaluación de riesgos general de SG.",
+    feedbackStdWrong: "El tipo de peligro es correcto, pero el estándar no. Para riesgos ergonómicos como la manipulación de cargas, el estándar general aplicable es SG- Evaluación de riesgos.",
+    feedbackHazWrong: "El estándar es correcto, pero el tipo de peligro no. Se trata de una tarea que implica levantar peso con mala postura: eso es A1- Manipulación manual de cargas.",
+    feedbackBothWrong: "Revisa la situación: un operario levanta un saco pesado con el torso girado. Es un riesgo ergonómico (A- Ergonomía, subtipo A1) y el estándar general que aplica es SG- Evaluación de riesgos.",
+  },
+  {
+    num: 2,
+    scenario: "Durante el mantenimiento de una cinta transportadora, un técnico retira una protección para acceder al mecanismo. La máquina no ha sido bloqueada ni etiquetada antes de comenzar el trabajo.",
+    hazard: "F2- Atrapamientos",
+    standard: "SG-LOTO",
+    hint: "La máquina no estaba bloqueada energéticamente. ¿Qué tipo de accidente puede ocurrir con una máquina en movimiento y qué procedimiento debería haberse aplicado?",
+    feedbackOk: "Perfecto. Sin bloqueo energético (LOTO), una máquina en mantenimiento puede activarse de forma imprevista. El riesgo de atrapamiento (F2) es directo, y el estándar SG-LOTO es exactamente el que regula esta situación.",
+    feedbackStdWrong: "El tipo de peligro es correcto. El estándar que regula específicamente el bloqueo y etiquetado de energía en trabajos de mantenimiento es SG-LOTO, no otro.",
+    feedbackHazWrong: "El estándar es correcto. La falta de bloqueo en un mecanismo en movimiento genera riesgo de atrapamiento: F2- Atrapamientos.",
+    feedbackBothWrong: "Cuando se trabaja en una máquina sin aislarla energéticamente, el riesgo es de atrapamiento (F2- Mecánicos) y el estándar que lo regula es SG-LOTO (Lockout/Tagout).",
+  },
+  {
+    num: 3,
+    scenario: "Un trabajador detecta que un compañero está usando el teléfono móvil mientras camina por una zona de confluencia de carretillas elevadoras y peatones.",
+    hazard: "G1- Atropellos",
+    standard: "SG-Móviles",
+    standardAlt: "SG- Vehículos y peatón",
+    hint: "El riesgo principal es el de ser atropellado por una carretilla. Dos estándares SG son aplicables aquí — uno regula el uso del móvil en planta, otro regula la confluencia de vehículos y peatones.",
+    feedbackOk: "Correcto. Esta situación activa dos estándares SG: SG-Móviles (uso del teléfono en zonas de riesgo) y SG- Vehículos y peatón (confluencia de carretillas y peatones). Ambas respuestas son válidas.",
+    feedbackStdWrong: "El tipo de peligro es correcto. Esta situación activa dos estándares: SG-Móviles (uso del teléfono en zonas de riesgo) y SG- Vehículos y peatón (confluencia de vehículos y peatones). Ambos son válidos.",
+    feedbackHazWrong: "El estándar es correcto. En una zona de confluencia de carretillas y peatones, el riesgo al que se expone el trabajador distraído es de atropello: G1- Atropellos.",
+    feedbackBothWrong: "Un trabajador con el móvil en una zona de carretillas se expone a un atropello (G1- Atropellos). Los estándares aplicables son SG-Móviles (uso del teléfono) y SG- Vehículos y peatón (confluencia de vehículos y peatones).",
+  },
+  {
+    num: 4,
+    scenario: "Al revisar un cuadro eléctrico secundario, el operario de mantenimiento encuentra la puerta entreabierta y varios bornes sin protección accesibles al tacto.",
+    hazard: "E1- Contactos eléctricos",
+    standard: "SG- Seguridad eléctrica",
+    hint: "Los bornes sin protección exponen a contacto con partes bajo tensión. ¿Qué categoría de peligro (E - Térmicos) y qué estándar de seguridad aplican?",
+    feedbackOk: "Correcto. Los bornes sin protección en un cuadro eléctrico abierto representan un riesgo de contacto eléctrico directo (E1), regulado por el estándar SG- Seguridad eléctrica.",
+    feedbackStdWrong: "El tipo de peligro es correcto. El estándar que regula específicamente las instalaciones y equipos eléctricos es SG- Seguridad eléctrica.",
+    feedbackHazWrong: "El estándar es correcto. Un cuadro eléctrico con bornes sin protección expone al operario a contacto directo con la corriente: E1- Contactos eléctricos.",
+    feedbackBothWrong: "Un cuadro eléctrico abierto con bornes accesibles es un riesgo de contacto eléctrico (E1- en la categoría E- Térmicos). El estándar SG aplicable es SG- Seguridad eléctrica.",
+  },
+  {
+    num: 5,
+    scenario: "Un trabajador realiza tareas de limpieza con aire comprimido sin llevar gafas de protección. Una partícula de polvo le impacta en el ojo izquierdo causándole irritación.",
+    hazard: "F6- Proyección de partículas",
+    standard: "SG- EPIs",
+    hint: "El evento se produce por la proyección de partículas y la ausencia de un EPI específico. ¿Cuál es el subtipo de peligro mecánico y qué estándar de SG protege los equipos de protección individual?",
+    feedbackOk: "Exacto. El soplo de aire comprimido genera proyección de partículas (F6- Mecánicos) y la lesión se produce porque el trabajador no llevaba las gafas de protección (EPI). El estándar aplicable es SG- EPIs.",
+    feedbackStdWrong: "El tipo de peligro es correcto. La lesión se produce porque el trabajador no lleva el EPI adecuado (gafas de protección). El estándar que regula los EPIs es SG- EPIs.",
+    feedbackHazWrong: "El estándar es correcto. El uso de aire comprimido genera proyección de partículas: F6- Proyección de partículas, dentro de la categoría F- Mecánicos.",
+    feedbackBothWrong: "Soplar con aire comprimido sin gafas genera proyección de partículas (F6- Mecánicos). La lesión se debe a la ausencia del EPI correcto, regulado por el estándar SG- EPIs.",
+  }
+];
+
+const standards = [
+  "-- Selecciona el estándar SG --",
+  "SG- Evaluación de riesgos",
+  "SG- Lugares de trabajo",
+  "SG- EPIs",
+  "SG- Seguridad en máquinas",
+  "SG-LOTO",
+  "SG- Seguridad eléctrica",
+  "SG- Trabajos en altura",
+  "SG- Permisos de trabajo",
+  "SG- Espacios confinados",
+  "SG- Carretillas elevadoras",
+  "SG- Vehículos y peatón",
+  "SG- Almacenamiento, carga y descarga",
+  "SG- Equipos de elevación",
+  "SG- Materias primas, productos químicos y aditivos (TAS)",
+  "SG- Ruido laboral (NOS)",
+  "SG- Sistemas de combustión",
+  "SG- Plan de emergencia",
+  "SG- Control de contratas",
+  "SG-Móviles",
+];
+
+const hazardTypes = [
+  "-- Selecciona el tipo de peligro --",
+  "A1- Manipulación manual de cargas",
+  "A2- Posturas forzadas",
+  "A3- Movimientos repetitivos",
+  "A4- Trabajos nocturnos",
+  "A5- Trabajo a turnos",
+  "A6- Trabajos en aislamiento",
+  "A7- Estrés laboral",
+  "B1- Exposición a agentes químicos (higiene)",
+  "B2- Exposición a agentes biológicos",
+  "C1- Exposición a agentes físicos/vibraciones",
+  "C2- Exposición a agentes físicos/Ruido",
+  "C3- Exposición a agentes físicos/Temperaturas extremas",
+  "C4- Exposición a agentes físicos/Iluminación",
+  "C5- Exposición a agentes físicos/Radiaciones",
+  "C6- Exposición a agentes físicos/Entorno",
+  "C7- Exposición a agentes físicos/Condiciones climáticas",
+  "D1- Caídas al mismo nivel",
+  "D2- Caídas a distinto nivel",
+  "D3- Caída de objetos",
+  "E1- Contactos eléctricos",
+  "E2- Incendio y/o explosión",
+  "F1- Corte con objetos (cortes, pinchazos, etc.)",
+  "F2- Atrapamientos",
+  "F3- Golpes con objetos (móviles e inmóviles)",
+  "F4- Contacto con sustancias químicas",
+  "F5- Contactos térmicos",
+  "F6- Proyección de partículas",
+  "G1- Atropellos",
+  "G2- Accidentes de circulación (choques, vuelcos, etc.)",
+  "H1- Agresiones",
+  "H2- Causas naturales (embolia, infarto, etc.)",
+  "H3- Accidentes causados por seres vivos",
+];
+
+let current = 0;
+let scores = [];
+let attempts = [];
+
+function renderEvent(idx) {
+  const ev = events[idx];
+  const container = document.getElementById('event-container');
+
+  let stdOptions = standards.map(s => `<option value="${s}">${s}</option>`).join('');
+  let hazOptions = hazardTypes.map(h => `<option value="${h}">${h}</option>`).join('');
+
+  container.innerHTML = `
+    <div class="event-card">
+      <div class="event-num">Evento ${ev.num} de ${events.length}</div>
+      <div class="event-scenario">"${ev.scenario}"</div>
+      <div class="question-row">
+        <div class="question-block">
+          <label>📋 Estándar SG afectado</label>
+          <div class="select-wrapper">
+            <select id="sel-std"><option value="">-- Selecciona el estándar SG --</option>${stdOptions}</select>
+            <span class="select-arrow">▼</span>
+          </div>
+        </div>
+        <div class="question-block">
+          <label>⚠️ Tipo de peligro</label>
+          <div class="select-wrapper">
+            <select id="sel-haz"><option value="">-- Selecciona el tipo de peligro --</option>${hazOptions}</select>
+            <span class="select-arrow">▼</span>
+          </div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btn-check" onclick="checkEvent(${idx})">✓ Confirmar</button>
+        <button class="hint-btn" onclick="toggleHint(${idx})">💡 Pista</button>
+      </div>
+      <div id="hint-${idx}" class="hint-box">${ev.hint}</div>
+      <div id="feedback-${idx}" class="feedback-box"></div>
+    </div>`;
+
+  updateProgress(idx);
+}
+
+function toggleHint(idx) {
+  const hint = document.getElementById(`hint-${idx}`);
+  hint.classList.toggle('show');
+}
+
+function checkEvent(idx) {
+  const ev = events[idx];
+  const selStd = document.getElementById('sel-std');
+  const selHaz = document.getElementById('sel-haz');
+  const stdVal = selStd.value;
+  const hazVal = selHaz.value;
+
+  if (!stdVal || stdVal.startsWith('--') || !hazVal || hazVal.startsWith('--')) {
+    alert('Por favor selecciona tanto el estándar SG como el tipo de peligro antes de confirmar.');
+    return;
+  }
+
+  const stdOk = stdVal === ev.standard || (ev.standardAlt && stdVal === ev.standardAlt);
+  const hazOk = hazVal === ev.hazard;
+
+  selStd.className = stdOk ? 'correct' : 'incorrect';
+  selHaz.className = hazOk ? 'correct' : 'incorrect';
+
+  const fb = document.getElementById(`feedback-${idx}`);
+  fb.classList.add('show');
+
+  if (stdOk && hazOk) {
+    playBothCorrect();
+    fb.className = 'feedback-box show success';
+    fb.innerHTML = `✅ ${ev.feedbackOk}`;
+    scores.push(2);
+  } else if (stdOk && !hazOk) {
+    playPartialCorrect();
+    fb.className = 'feedback-box show partial';
+    fb.innerHTML = `⚠️ ${ev.feedbackStdWrong}<br><br><strong>Respuesta correcta:</strong> Tipo de peligro → <strong>${ev.hazard}</strong><br><br><button onclick="nextQuestion(${idx})" style="margin-top:12px;padding:10px 16px;border:none;border-radius:8px;background:#1B2A4A;color:white;font-weight:600;cursor:pointer;">Siguiente pregunta</button>`;
+    scores.push(1);
+  } else if (!stdOk && hazOk) {
+    playPartialCorrect();
+    fb.className = 'feedback-box show partial';
+    fb.innerHTML = `⚠️ ${ev.feedbackHazWrong}<br><br><strong>Respuesta correcta:</strong> Estándar → <strong>${ev.standard}</strong><br><br><button onclick="nextQuestion(${idx})" style="margin-top:12px;padding:10px 16px;border:none;border-radius:8px;background:#1B2A4A;color:white;font-weight:600;cursor:pointer;">Siguiente pregunta</button>`;
+    scores.push(1);
+  } else {
+    playBothWrong();
+    fb.className = 'feedback-box show error';
+    fb.innerHTML = `❌ ${ev.feedbackBothWrong}<br><br><strong>Respuestas correctas:</strong> Estándar → <strong>${ev.standard}</strong> · Tipo de peligro → <strong>${ev.hazard}</strong><br><br><button onclick="nextQuestion(${idx})" style="margin-top:12px;padding:10px 16px;border:none;border-radius:8px;background:#1B2A4A;color:white;font-weight:600;cursor:pointer;">Siguiente pregunta</button>`;
+    scores.push(0);
+  }
+
+  document.getElementById('btn-check').disabled = true;
+  selStd.disabled = true;
+  selHaz.disabled = true;
+
+  // Update dot
+  const dot = document.getElementById(`dot-${idx + 1}`);
+  dot.classList.remove('current');
+  dot.classList.add(stdOk && hazOk ? 'done' : 'wrong');
+
+  if (stdOk && hazOk) {
+    const delay = 5500;
+    setTimeout(() => {
+      if (idx < events.length - 1) {
+        current = idx + 1;
+        renderEvent(current);
+        const nextDot = document.getElementById(`dot-${current + 1}`);
+        if (nextDot) nextDot.classList.add('current');
+      } else {
+        showFinal();
+      }
+    }, delay);
+  }
+}
+
+function updateProgress(idx) {
+  document.getElementById('progress-label').textContent = `Evento ${idx + 1} de ${events.length}`;
+}
+
+
+function nextQuestion(idx){
+  if (idx < events.length - 1) {
+    current = idx + 1;
+    renderEvent(current);
+    const nextDot = document.getElementById(`dot-${current + 1}`);
+    if (nextDot) nextDot.classList.add('current');
+  } else {
+    showFinal();
+  }
+}
+
+function showFinal() {
+  document.getElementById('event-container').style.display = 'none';
+  const total = events.length * 2;
+  const got = scores.reduce((a, b) => a + b, 0);
+  const pct = Math.round((got / total) * 100);
+
+  let icon, msg;
+  if (pct === 100) {
+    icon = '🏆'; msg = '¡Dominio completo! Has clasificado correctamente todos los estándares y tipos de peligro. Estás listo para aplicar esto en la aplicación EHS.';
+  } else if (pct >= 70) {
+    icon = '✅'; msg = 'Buen trabajo. Tienes una base sólida. Repasa los eventos en los que dudaste — especialmente la relación entre el tipo de peligro y el estándar SG correspondiente.';
+  } else {
+    icon = '📖'; msg = 'Necesitas repasar un poco más. Vuelve a la sección de estándares y tipos de peligro del módulo antes de intentarlo de nuevo. ¡No te preocupes, es normal en la primera vuelta!';
+  }
+
+  const final = document.getElementById('final-screen');
+  final.classList.add('show');
+  setTimeout(() => playCelebration(), 200);
+
+  const accessCodeHtml = pct >= 70 ? `
+    <div style="margin:24px auto 0; max-width:480px; background:#f0f4f8; border-left:4px solid #4DB8A4; border-radius:10px; padding:16px 20px; text-align:left;">
+      <div style="font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#4DB8A4; margin-bottom:8px;">Código de acceso</div>
+      <div style="font-size:13px; color:#444; line-height:1.6; margin-bottom:8px;">Has superado la actividad. Introduce este código en la plataforma para continuar con el módulo:</div>
+      <div style="font-size:24px; font-weight:800; letter-spacing:2px; color:#1B2A4A;">R8M4-X2Q7</div>
+    </div>` : '';
+
+  final.innerHTML = `
+    <div class="final-icon">${icon}</div>
+    <div class="final-score">${got}/${total}</div>
+    <div class="final-label">puntos obtenidos · ${pct}% de acierto</div>
+    <div class="final-msg">${msg}</div>
+    ${accessCodeHtml}
+    <button class="btn btn-primary" onclick="restart()">↺ Intentar de nuevo</button>`;
+}
+
+function restart() {
+  current = 0;
+  scores = [];
+  document.getElementById('final-screen').className = 'final-screen';
+  document.getElementById('event-container').style.display = 'block';
+  document.querySelectorAll('.dot').forEach((d, i) => {
+    d.className = 'dot' + (i === 0 ? ' current' : '');
+  });
+  renderEvent(0);
+}
+
+// Start
+renderEvent(0);
+</script>
+</body>
+</html>
