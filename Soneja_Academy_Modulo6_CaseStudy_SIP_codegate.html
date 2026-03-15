@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Módulo 4 · Caso Real · Riesgo de Atrapamiento en Rodillos H3</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-height: 100vh; padding: 24px; }
+
+  .header {
+    background: linear-gradient(135deg, #7B1A1A 0%, #B22222 100%);
+    color: white; border-radius: 16px; padding: 28px 32px; margin-bottom: 24px;
+  }
+  .header-label { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #FFB3B3; margin-bottom: 8px; }
+  .header-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+  .header h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+  .header p { font-size: 13px; color: #f0c0c0; line-height: 1.5; }
+  .sip-badge {
+    background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.4);
+    border-radius: 10px; padding: 10px 16px; text-align: center; flex-shrink: 0;
+  }
+  .sip-badge-title { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #FFB3B3; }
+  .sip-badge-value { font-size: 18px; font-weight: 800; color: white; }
+
+  /* PROGRESS */
+  .steps-bar {
+    background: white; border-radius: 12px; padding: 16px 24px;
+    margin-bottom: 24px; display: flex; align-items: center; gap: 0;
+  }
+  .step-item { display: flex; align-items: center; flex: 1; }
+  .step-circle {
+    width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; transition: all 0.3s;
+    background: #e0e8f0; color: #888;
+  }
+  .step-circle.active { background: #B22222; color: white; transform: scale(1.1); }
+  .step-circle.done { background: #4DB8A4; color: white; }
+  .step-line { flex: 1; height: 2px; background: #e0e8f0; margin: 0 4px; }
+  .step-line.done { background: #4DB8A4; }
+
+  /* CARDS */
+  .card { background: white; border-radius: 16px; padding: 28px; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+  .card-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #B22222; margin-bottom: 12px; }
+
+  /* INCIDENT */
+  .incident-box {
+    background: #fff5f5; border: 1px solid #ffcdd2; border-radius: 12px;
+    padding: 20px 24px; margin-bottom: 20px;
+  }
+  .incident-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; color: #c62828; text-transform: uppercase; margin-bottom: 10px; }
+  .incident-text { font-size: 14px; color: #1B2A4A; line-height: 1.8; }
+
+  /* SIP EXPLANATION */
+  .sip-box {
+    background: linear-gradient(135deg, #7B1A1A, #B22222);
+    color: white; border-radius: 12px; padding: 18px 22px; margin-bottom: 20px;
+  }
+  .sip-box-title { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #FFB3B3; margin-bottom: 8px; }
+  .sip-box-text { font-size: 13px; line-height: 1.6; color: #f0d0d0; }
+
+  /* FACTS */
+  .facts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-top: 16px; }
+  .fact-item { background: #f0f4f8; border-radius: 10px; padding: 14px 16px; border-left: 3px solid #1B2A4A; }
+  .fact-label { font-size: 10px; font-weight: 700; color: #888; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px; }
+  .fact-value { font-size: 13px; color: #1B2A4A; font-weight: 600; line-height: 1.4; }
+
+  /* WHY CHAIN */
+  .why-chain { display: flex; flex-direction: column; gap: 0; }
+  .why-step { display: grid; grid-template-columns: 48px 1fr; gap: 16px; position: relative; padding-bottom: 20px; }
+  .why-step:not(:last-child)::after {
+    content: ''; position: absolute; left: 23px; top: 48px;
+    width: 2px; height: calc(100% - 20px); background: #e0e8f0;
+  }
+  .why-step.answered:not(:last-child)::after { background: #4DB8A4; }
+  .why-num {
+    width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 800; color: #888; background: #e0e8f0;
+    border: 2px solid #d0d8e0; position: relative; z-index: 1; transition: all 0.3s;
+  }
+  .why-step.active .why-num { background: #B22222; color: white; border-color: #B22222; }
+  .why-step.answered .why-num { background: #4DB8A4; color: white; border-color: #4DB8A4; }
+  .why-content { padding-top: 10px; }
+  .why-question { font-size: 14px; font-weight: 700; color: #1B2A4A; margin-bottom: 4px; }
+  .why-context { font-size: 12px; color: #888; font-style: italic; margin-bottom: 12px; line-height: 1.5; }
+
+  .options-list { display: flex; flex-direction: column; gap: 8px; }
+  .option-btn {
+    background: white; border: 2px solid #e0e8f0; border-radius: 10px;
+    padding: 12px 16px; font-size: 13px; color: #1B2A4A; cursor: pointer;
+    text-align: left; transition: all 0.2s; font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.5;
+  }
+  .option-btn:hover:not(:disabled) { border-color: #B22222; background: #fff5f5; }
+  .option-btn.selected-correct { border-color: #2e7d32; background: #e8f5e9; color: #1b5e20; pointer-events: none; }
+  .option-btn.selected-wrong { border-color: #c62828; background: #ffebee; color: #7f0000; pointer-events: none; animation: shake 0.4s ease; }
+  .option-btn.revealed-correct { border-color: #2e7d32; background: #f1f8f1; color: #2e7d32; pointer-events: none; }
+  .option-btn:disabled { opacity: 0.45; pointer-events: none; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+
+  .why-feedback { margin-top: 10px; border-radius: 8px; padding: 12px 16px; font-size: 12px; line-height: 1.6; display: none; }
+  .why-feedback.show { display: block; }
+  .why-feedback.correct { background: #e8f5e9; border: 1px solid #a5d6a7; color: #1b5e20; }
+  .why-feedback.wrong { background: #fff8e1; border: 1px solid #ffe082; color: #5c4000; }
+  .locked-msg { font-size: 12px; color: #aaa; font-style: italic; padding: 8px 0; }
+  .multi-hint { font-size: 11px; color: #B22222; font-style: italic; margin-bottom: 10px; font-weight: 600; }
+  .option-btn.selected-multi { border-color: #1565c0; background: #e3f2fd; color: #0d47a1; }
+  .confirm-btn {
+    margin-top: 10px; padding: 9px 20px; border-radius: 20px; font-size: 12px; font-weight: 700;
+    cursor: pointer; border: none; background: #B22222; color: white; transition: all 0.2s;
+  }
+  .confirm-btn:hover { background: #7B1A1A; }
+
+  /* CHAIN SUMMARY */
+  .chain-display { background: #f0f4f8; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+  .chain-title { font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #888; margin-bottom: 16px; }
+  .chain-row { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+  .chain-badge { font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 12px; white-space: nowrap; flex-shrink: 0; margin-top: 2px; }
+  .badge-immediate { background: #fff8e1; color: #f57f17; border: 1px solid #ffe082; }
+  .badge-underlying { background: #e3f2fd; color: #1565c0; border: 1px solid #90caf9; }
+  .badge-root { background: #fce4ec; color: #c62828; border: 1px solid #ef9a9a; }
+  .chain-text { font-size: 13px; color: #1B2A4A; line-height: 1.5; }
+
+  /* ROOT CAUSE BOX */
+  .root-cause-box {
+    background: linear-gradient(135deg, #7B1A1A, #B22222); color: white;
+    border-radius: 14px; padding: 24px 28px; margin-bottom: 20px; display: none;
+  }
+  .root-cause-box.show { display: block; animation: fadeInUp 0.5s ease; }
+  @keyframes fadeInUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+  .root-cause-label { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #FFB3B3; margin-bottom: 8px; }
+  .root-cause-text { font-size: 16px; font-weight: 700; line-height: 1.5; margin-bottom: 16px; }
+  .corrective-title { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #f0c0c0; margin-bottom: 10px; }
+  .corrective-list { list-style: none; }
+  .corrective-list li { font-size: 13px; color: #f0d0d0; padding: 6px 0; padding-left: 18px; position: relative; line-height: 1.5; }
+  .corrective-list li::before { content: '→'; position: absolute; left: 0; color: #FFB3B3; }
+
+  /* REAL ACTIONS REVEAL */
+  .real-actions-box {
+    background: #f0f4f8; border-radius: 12px; padding: 20px; margin-bottom: 20px; display: none;
+  }
+  .real-actions-box.show { display: block; }
+  .real-actions-title { font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #888; margin-bottom: 12px; }
+  .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .compare-col { background: white; border-radius: 10px; padding: 16px; }
+  .compare-col-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+  .compare-col.yours .compare-col-title { color: #1B2A4A; }
+  .compare-col.real .compare-col-title { color: #B22222; }
+  .compare-col ul { list-style: none; }
+  .compare-col ul li { font-size: 12px; color: #444; padding: 5px 0; padding-left: 14px; position: relative; line-height: 1.5; border-bottom: 1px solid #f0f4f8; }
+  .compare-col ul li:last-child { border-bottom: none; }
+  .compare-col ul li::before { content: '•'; position: absolute; left: 0; color: #888; }
+  .compare-col.real ul li::before { color: #B22222; }
+
+  /* CONTRIBUTING FACTORS */
+  .factors-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+  .factor-category { background: #f0f4f8; border-radius: 10px; padding: 16px; }
+  .factor-cat-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #1B2A4A; margin-bottom: 10px; }
+  .factor-check { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px; cursor: pointer; padding: 6px 8px; border-radius: 6px; transition: background 0.15s; }
+  .factor-check:hover { background: white; }
+  .factor-check input[type="checkbox"] { margin-top: 2px; accent-color: #B22222; width: 15px; height: 15px; flex-shrink: 0; cursor: pointer; }
+  .factor-check label { font-size: 12px; color: #444; line-height: 1.5; cursor: pointer; }
+  .factors-feedback { margin-top: 16px; border-radius: 10px; padding: 14px 18px; font-size: 13px; line-height: 1.6; display: none; }
+  .factors-feedback.show { display: block; }
+  .factors-feedback.good { background: #e8f5e9; border: 1px solid #a5d6a7; color: #1b5e20; }
+  .factors-feedback.ok { background: #fff8e1; border: 1px solid #ffe082; color: #5c4000; }
+
+  /* REFLECTION */
+  .key-point-box {
+    background: linear-gradient(135deg, #7B1A1A, #B22222); color: white;
+    border-radius: 12px; padding: 20px 24px; margin-bottom: 16px;
+  }
+  .key-point-label { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #FFB3B3; margin-bottom: 8px; }
+  .key-point-text { font-size: 15px; font-weight: 700; line-height: 1.5; }
+
+  .reflection-list { list-style: none; margin-top: 16px; }
+  .reflection-list li { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f0f4f8; font-size: 13px; line-height: 1.6; color: #444; }
+  .reflection-list li:last-child { border-bottom: none; }
+  .reflection-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+
+  /* BUTTONS */
+  .btn { padding: 11px 24px; border-radius: 22px; font-size: 13px; font-weight: 700; cursor: pointer; border: none; transition: all 0.2s; letter-spacing: 0.5px; }
+  .btn-primary { background: #1B2A4A; color: white; }
+  .btn-primary:hover { background: #2C4A7A; transform: translateY(-1px); }
+  .btn-red { background: #B22222; color: white; }
+  .btn-red:hover { background: #7B1A1A; }
+  .btn-teal { background: #4DB8A4; color: white; }
+  .btn-back { background: white; color: #888; border: 2px solid #d0d8e0; }
+  .btn-back:hover { background: #f0f4f8; color: #1B2A4A; border-color: #1B2A4A; }
+  .btn-teal:hover { background: #3a9a88; }
+
+  /* COMPLETION */
+  .completion-card {
+    background: linear-gradient(135deg, #1B2A4A, #2C4A7A); color: white;
+    border-radius: 16px; padding: 40px 32px; text-align: center; display: none; margin-bottom: 20px;
+  }
+  .completion-card.show { display: block; animation: fadeInUp 0.5s ease; }
+  .completion-icon { font-size: 56px; margin-bottom: 12px; }
+  .completion-card h2 { font-size: 22px; margin-bottom: 8px; }
+  .completion-card p { color: #a0b4cc; font-size: 14px; line-height: 1.7; max-width: 480px; margin: 0 auto 24px; }
+
+  @media (max-width: 640px) {
+    .factors-grid { grid-template-columns: 1fr; }
+    .compare-grid { grid-template-columns: 1fr; }
+    .facts-grid { grid-template-columns: 1fr 1fr; }
+    .header-row { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+<div class="header">
+<div class="header-label">Módulo 4 · Caso Real · IF5 SIP · Planta SG — Grupo Saint-Gobain</div>
+<div class="header-row">
+<div>
+<h1>Riesgo de atrapamiento en rodillos del horno H3</h1>
+<p>Un caso real del Grupo SG. Aplica los 5 Por Qués para identificar la causa raíz — luego contrasta tu análisis con el que realizó la planta.</p>
+</div>
+<div class="sip-badge">
+<div class="sip-badge-title">Clasificación</div>
+<div class="sip-badge-value">IF5 · SIP</div>
+<div style="font-size:10px;color:#FFB3B3;margin-top:2px">Cat. 4 — Reactivo</div>
+</div>
+</div>
+</div>
+<!-- PROGRESS -->
+<div class="steps-bar">
+<div class="step-item"><div class="step-circle active" id="sc-1">1</div><div class="step-line" id="sl-1"></div></div>
+<div class="step-item"><div class="step-circle" id="sc-2">2</div><div class="step-line" id="sl-2"></div></div>
+<div class="step-item"><div class="step-circle" id="sc-3">3</div><div class="step-line" id="sl-3"></div></div>
+<div class="step-item"><div class="step-circle" id="sc-4">4</div><div class="step-line" id="sl-4"></div></div>
+<div class="step-item"><div class="step-circle" id="sc-5">5</div><div class="step-line" id="sl-5" style="visibility:hidden"></div></div>
+</div>
+<!-- ═══ PHASE 1 — INCIDENT ═══ -->
+<div id="phase-1">
+<div class="card">
+<div class="sip-box">
+<div class="sip-box-title">¿Qué es un IF5 SIP?</div>
+<div class="sip-box-text">Un IF5 es un acto o condición insegura detectada — sin daño. Un SIP (Situación de Importante Potencial) se declara cuando esa situación podría haber causado una lesión grave o mortal. Este caso es IF5 porque no hubo lesionado. Es SIP porque el riesgo real de atrapamiento era muy elevado.</div>
+</div>
+<div class="card-title">El evento</div>
+<div class="incident-box">
+<div class="incident-label">📋 Descripción — Planta SG · Octubre 2025</div>
+<div class="incident-text">
+        Tras la reparación y recolocación de un rodillo de apoyo del horno H3, se arranca el horno sin haber colocado de nuevo las protecciones. La zona con los rodillos girando queda completamente accesible. Un trabajador podría haberse atrapado los dedos, la mano o el brazo entre los rodillos en movimiento sin ninguna protección física que lo impidiera.
+      </div>
+</div>
+<div class="card-title">Datos del evento</div>
+<div class="facts-grid">
+<div class="fact-item"><div class="fact-label">Tipo</div><div class="fact-value">IF5 — Condición insegura detectada. Sin lesionado.</div></div>
+<div class="fact-item"><div class="fact-label">Potencial</div><div class="fact-value">SIP — Riesgo de atrapamiento grave o mortal en rodillos en movimiento.</div></div>
+<div class="fact-item"><div class="fact-label">Tarea previa</div><div class="fact-value">Reparación y recolocación de rodillo de apoyo del H3.</div></div>
+<div class="fact-item"><div class="fact-label">Situación detectada</div><div class="fact-value">El horno arranca sin protecciones colocadas. Zona accesible con rodillos en movimiento.</div></div>
+<div class="fact-item"><div class="fact-label">Permiso de trabajo</div><div class="fact-value">El PT no se cerró adecuadamente tras la reparación.</div></div>
+<div class="fact-item"><div class="fact-label">LOTO</div><div class="fact-value">No se revisó el estado del equipo antes de la puesta en marcha. Procedimiento de consignación incumplido.</div></div>
+</div>
+<!-- SIP DECISION -->
+<div id="sip-question" style="margin-top:28px;background:#fff5f5;border:1px solid #ffcdd2;border-radius:14px;padding:22px 24px;">
+<div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#B22222;margin-bottom:10px;">🤔 Antes de continuar — tu criterio</div>
+<p style="font-size:14px;color:#1B2A4A;font-weight:600;margin-bottom:6px;">¿Clasificarías este evento como SIP?</p>
+<p style="font-size:12px;color:#666;margin-bottom:18px;line-height:1.6;">Recuerda: un SIP (Situación de Importante Potencial) es una situación sin lesión pero con potencial de causar una lesión grave o mortal. Analiza los datos del evento y decide.</p>
+<div id="sip-options" style="display:flex;flex-direction:column;gap:10px;">
+<button class="option-btn" id="sip-yes" onclick="answerSIP(true)">
+          Sí — lo clasificaría como SIP. El riesgo de atrapamiento en rodillos en movimiento tiene potencial de causar una lesión grave o mortal.
+        </button>
+<button class="option-btn" id="sip-no" onclick="answerSIP(false)">
+          No — es un IF5 suficiente. No hay lesión ni evidencia de daño potencial grave.
+        </button>
+</div>
+<div id="sip-feedback" style="display:none;margin-top:14px;border-radius:8px;padding:14px 16px;font-size:13px;line-height:1.6;"></div>
+</div>
+<div id="phase1-btn" style="margin-top:20px;display:none;justify-content:flex-end">
+<button class="btn btn-red" onclick="goPhase(2)">Comenzar los 5 Por Qués →</button>
+</div>
+</div>
+</div>
+<!-- ═══ PHASE 2 — 5 WHYS ═══ -->
+<div id="phase-2" style="display:none">
+<div class="card">
+<div style="margin-bottom:16px"><button class="btn btn-back" onclick="goBack(2)">← Volver al evento</button></div>
+<div class="card-title">Los 5 Por Qués — aplica la técnica</div>
+<p style="font-size:13px;color:#666;margin-bottom:24px;line-height:1.6">Selecciona la respuesta que mejor refleja lo que los datos del evento nos indican. Si te equivocas, se revelará la respuesta correcta y podrás continuar.</p>
+<div class="why-chain" id="why-chain"></div>
+</div>
+</div>
+<!-- ═══ PHASE 3 — CAUSAL CHAIN ═══ -->
+<div id="phase-3" style="display:none">
+<div class="card">
+<div style="margin-bottom:16px"><button class="btn btn-back" onclick="goBack(3)">← Volver a los 5 Por Qués</button></div>
+<div class="card-title">La cadena causal — resumen</div>
+<p style="font-size:13px;color:#666;margin-bottom:20px;line-height:1.6">Repasa los tres niveles de causa identificados en este evento antes de ver la causa raíz.</p>
+<div class="chain-display">
+<div class="chain-title">De la causa inmediata a la causa raíz</div>
+<div class="chain-row">
+<span class="chain-badge badge-immediate">Causa inmediata</span>
+<span class="chain-text">El horno H3 arrancó con los rodillos de apoyo desprotegidos, dejando una zona de atrapamiento accesible.</span>
+</div>
+<div class="chain-row">
+<span class="chain-badge badge-underlying">Causa subyacente</span>
+<span class="chain-text">No se restablecieron las condiciones de seguridad previas a la reparación: las protecciones no se colocaron y el Permiso de Trabajo no se cerró correctamente.</span>
+</div>
+<div class="chain-row" id="root-row" style="display:none">
+<span class="chain-badge badge-root">Causa raíz</span>
+<span class="chain-text" id="root-text"></span>
+</div>
+</div>
+<div class="root-cause-box" id="root-cause-box">
+<div class="root-cause-label">Causa raíz identificada</div>
+<div class="root-cause-text" id="root-cause-text"></div>
+<div class="corrective-title">Lo que tú propondrías como acciones correctivas</div>
+<ul class="corrective-list" id="corrective-list"></ul>
+</div>
+<div class="real-actions-box" id="real-actions-box">
+<div class="real-actions-title">Contrasta — ¿qué hizo realmente la planta?</div>
+<div class="compare-grid">
+<div class="compare-col yours">
+<div class="compare-col-title">💡 Lo que se propone desde el análisis</div>
+<ul>
+<li>Reforzar el procedimiento de cierre de PT incluyendo verificación de protecciones como paso obligatorio</li>
+<li>Ampliar la formación LOTO para incluir la verificación del estado del equipo antes de puesta en marcha</li>
+<li>Revisar si esta disfunción existe en otras tareas de la planta</li>
+<li>Establecer un control de supervisión en el rearranque tras mantenimiento</li>
+</ul>
+</div>
+<div class="compare-col real">
+<div class="compare-col-title">✅ Plan de acción real de la planta</div>
+<ul>
+<li>Balizamiento inmediato de la zona para atenuar el riesgo mientras los rodillos están desprotegidos</li>
+<li>Colocación de todas las protecciones en la primera parada disponible</li>
+<li>Refresco de formación sobre Permisos de Trabajo y LOTO (disfunción ya detectada en otras tareas)</li>
+</ul>
+</div>
+</div>
+<div style="margin-top:14px;background:white;border-radius:8px;padding:14px 18px;font-size:12px;color:#444;line-height:1.6;border-left:3px solid #B22222">
+<strong style="color:#B22222">Punto clave del informe de la planta:</strong> "Falta de rigor en la ejecución de los procedimientos — en este caso Permisos de Trabajo y LOTO." La planta identifica que esta no es la primera vez que se detecta esta disfunción, lo que refuerza que la causa raíz está en el sistema de formación y seguimiento de procedimientos, no en un error puntual.
+      </div>
+</div>
+<div id="phase3-btn" style="display:none;justify-content:flex-end;margin-top:16px">
+<button class="btn btn-primary" onclick="goPhase(4)">Continuar — Factores contributivos →</button>
+</div>
+</div>
+</div>
+<!-- ═══ PHASE 4 — CONTRIBUTING FACTORS ═══ -->
+<div id="phase-4" style="display:none">
+<div class="card">
+<div style="margin-bottom:16px"><button class="btn btn-back" onclick="goBack(4)">← Volver a la cadena causal</button></div>
+<div class="card-title">Factores contributivos</div>
+<p style="font-size:13px;color:#666;margin-bottom:8px;line-height:1.6">¿Qué otras circunstancias contribuyeron a que este evento fuera posible? Marca todas las que consideres aplicables.</p>
+<p style="font-size:12px;color:#B22222;font-style:italic;margin-bottom:16px;">Pueden ser varios — no hay una única respuesta correcta.</p>
+<div class="factors-grid">
+<div class="factor-category">
+<div class="factor-cat-title">👤 Factores humanos</div>
+<label class="factor-check"><input id="fc1" type="checkbox"/><label for="fc1">Exceso de confianza al dar la tarea por terminada antes de verificar el estado del equipo</label></label>
+<label class="factor-check"><input id="fc2" type="checkbox"/><label for="fc2">Presión para poner el horno en marcha cuanto antes</label></label>
+<label class="factor-check"><input id="fc3" type="checkbox"/><label for="fc3">Fatiga o distracción durante la fase final de la tarea</label></label>
+</div>
+<div class="factor-category">
+<div class="factor-cat-title">🏭 Factores del entorno</div>
+<label class="factor-check"><input id="fc4" type="checkbox"/><label for="fc4">Zona de difícil acceso que dificulta la verificación visual antes del arranque</label></label>
+<label class="factor-check"><input id="fc5" type="checkbox"/><label for="fc5">Ausencia de sistema físico que impida el arranque con protecciones retiradas</label></label>
+<label class="factor-check"><input id="fc6" type="checkbox"/><label for="fc6">Ruido y condiciones del entorno del horno que dificultan la comunicación</label></label>
+</div>
+<div class="factor-category">
+<div class="factor-cat-title">🔧 Factores de equipo</div>
+<label class="factor-check"><input id="fc7" type="checkbox"/><label for="fc7">El sistema de arranque del horno no tiene enclavamiento vinculado a las protecciones</label></label>
+<label class="factor-check"><input id="fc8" type="checkbox"/><label for="fc8">Las protecciones no tienen indicador visual o sensor de posición que alerte si no están colocadas</label></label>
+</div>
+<div class="factor-category">
+<div class="factor-cat-title">🗂️ Factores organizativos</div>
+<label class="factor-check"><input id="fc9" type="checkbox"/><label for="fc9">El checklist del PT no incluye verificación explícita de protecciones antes del cierre</label></label>
+<label class="factor-check"><input id="fc10" type="checkbox"/><label for="fc10">Disfunción en la aplicación de LOTO ya detectada previamente sin haberse resuelto</label></label>
+<label class="factor-check"><input id="fc11" type="checkbox"/><label for="fc11">Ausencia de supervisión en el momento del rearranque tras mantenimiento</label></label>
+<label class="factor-check"><input id="fc12" type="checkbox"/><label for="fc12">Formación sobre PT y LOTO no actualizada o insuficientemente reforzada</label></label>
+</div>
+</div>
+<div style="margin-top:20px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+<button class="btn btn-primary" onclick="checkFactors()">✓ Revisar selección</button>
+</div>
+<div class="factors-feedback" id="factors-feedback"></div>
+</div>
+</div>
+<!-- ═══ PHASE 5 — REFLECTION ═══ -->
+<div id="phase-5" style="display:none">
+<div class="card">
+<div style="margin-bottom:16px"><button class="btn btn-back" onclick="goBack(5)">← Volver a los factores contributivos</button></div>
+<div class="card-title">Reflexión final</div>
+<div class="key-point-box">
+<div class="key-point-label">Punto clave del caso</div>
+<div class="key-point-text">"Falta de rigor en la ejecución de los procedimientos." — Esta fue la conclusión de la planta. Pero un buen análisis va más allá: ¿por qué hubo falta de rigor? ¿Una vez? ¿O es un patrón?</div>
+</div>
+<ul class="reflection-list">
+<li>
+<span class="reflection-icon">🔑</span>
+<div><strong>Este caso es especialmente valioso porque no hubo lesionado.</strong> Un IF5 bien analizado puede revelar la misma causa raíz que un accidente grave — antes de que el daño ocurra. La planta actuó bien al declararlo SIP y analizarlo con el mismo rigor que un IF1.</div>
+</li>
+<li>
+<span class="reflection-icon">🔄</span>
+<div><strong>La disfunción ya se había detectado antes.</strong> El informe indica que el problema con PT y LOTO había aparecido en otras tareas. Esto significa que las acciones correctivas anteriores no fueron suficientemente efectivas — o no llegaron a implementarse completamente. Una causa raíz no resuelta tiende a reaparecer.</div>
+</li>
+<li>
+<span class="reflection-icon">⚙️</span>
+<div><strong>La causa raíz está en el sistema, no en la persona.</strong> Decir "falta de rigor" describe el comportamiento. La pregunta correcta es: ¿qué fallo del sistema hizo posible que alguien pudiera arrancar el equipo sin protecciones y sin cerrar el PT? Ahí está la causa raíz accionable.</div>
+</li>
+<li>
+<span class="reflection-icon">✅</span>
+<div><strong>Una acción correctiva sobre la causa raíz.</strong> Si el PT incluyera como paso obligatorio y verificable la confirmación de que todas las protecciones están en su sitio antes del cierre — y si eso se verificara antes del rearranque — este evento no podría haberse producido.</div>
+</li>
+</ul>
+<div style="margin-top:20px;background:#f0f4f8;border-radius:10px;padding:16px;border-left:3px solid #4DB8A4">
+<p style="font-size:13px;color:#1B2A4A;font-style:italic;line-height:1.7">"Un IF5 bien reportado y bien analizado vale más que diez accidentes no reportados. La diferencia está en la cultura."</p>
+</div>
+<div style="margin-top:24px;display:flex;justify-content:flex-end">
+<button class="btn btn-teal" onclick="complete()">Finalizar caso práctico ✓</button>
+</div>
+</div>
+</div>
+<!-- COMPLETION -->
+<div class="completion-card" id="completion">
+<div class="completion-icon">🎯</div>
+<h2 id="completion-title">Caso real completado</h2>
+<p id="completion-message">Has analizado un evento real del Grupo Saint-Gobain, identificado la causa raíz, reconocido los factores contributivos y contrastado tu análisis con el plan de acción real de la planta. Este es exactamente el proceso que se aplica en Soneja.</p>
+<div id="completion-meta" style="font-size:13px;font-weight:700;color:#d7e4f4;margin-bottom:18px;"></div>
+<div id="completion-code-box" style="display:none;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);border-radius:12px;padding:18px 20px;max-width:420px;margin:0 auto 18px;">
+<div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#a0b4cc;margin-bottom:8px;">Código de continuación</div>
+<div id="completion-code" style="font-size:28px;font-weight:800;letter-spacing:3px;color:white;margin-bottom:8px;"></div>
+<div style="font-size:12px;line-height:1.6;color:#d7e4f4;">Regresa al módulo e introduce este código para continuar con el itinerario formativo. Después completarás el quiz oficial del módulo.</div>
+</div>
+<div id="completion-retry-box" style="display:none;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.18);border-radius:12px;padding:16px 18px;max-width:420px;margin:0 auto 18px;font-size:12px;line-height:1.7;color:#d7e4f4;">
+    Necesitas al menos un <strong>70%</strong> de aciertos para obtener el código de continuación. Repite el caso y vuelve a intentarlo.
+  </div>
+<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+<button class="btn btn-teal" onclick="restart()">↺ Repetir el caso</button>
+</div>
+</div>
+<script>
+// ── AUDIO ──────────────────────────────────────────────────────────────
+let audioCtx = null;
+function getCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+function playTone(freqs, type, vol, dur) {
+  try {
+    const ctx = getCtx();
+    if (ctx.state === 'suspended') ctx.resume();
+    freqs.forEach((f, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = type; o.frequency.value = f;
+      const t = ctx.currentTime + i * 0.12;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(vol, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.start(t); o.stop(t + dur + 0.05);
+    });
+  } catch(e) {}
+}
+function playCorrect()   { playTone([523.25, 783.99], 'sine', 0.20, 0.35); }
+function playWrong()     { playTone([180], 'sawtooth', 0.14, 0.22); }
+function playCelebrate() { playTone([523.25, 659.25, 783.99, 1046.5], 'sine', 0.18, 0.45); }
+document.addEventListener('mousedown', () => {
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}, { once: true });
+
+// ── DATA ───────────────────────────────────────────────────────────────
+const whys = [
+  {
+    question: '¿Por qué existía un riesgo de atrapamiento en los rodillos del H3?',
+    context: 'Observa los datos: ¿cuál es la condición física que generó el riesgo directamente?',
+    options: [
+      { text: 'Porque los rodillos del horno son inherentemente peligrosos y siempre suponen un riesgo.', correct: false, feedback: 'Los rodillos son peligrosos cuando están accesibles, no por naturaleza propia. El riesgo surge de una condición concreta que los datos describen claramente.' },
+      { text: 'Porque el horno arrancó con las protecciones de los rodillos sin colocar, dejando la zona accesible.', correct: true, feedback: 'Correcto. Esta es la causa inmediata: una condición física de riesgo creada por la ausencia de protecciones en el momento del arranque. Ahora preguntémonos por qué ocurrió eso.' },
+      { text: 'Porque un trabajador se acercó a los rodillos sin necesidad.', correct: false, feedback: 'Los datos no describen que nadie se acercara — la situación fue detectada antes de que ocurriera una lesión. La causa inmediata es la condición de riesgo, no el comportamiento de un trabajador.' },
+    ]
+  },
+  {
+    question: '¿Por qué el horno arrancó sin las protecciones colocadas?',
+    context: 'Piensa en el proceso que debería garantizar que el equipo está en condiciones seguras antes del arranque. Puede haber más de una respuesta correcta.',
+    multi: true,
+    options: [
+      { text: 'Porque quien arrancó el horno no sabía que las protecciones no estaban colocadas — consecuencia directa de no haber cerrado correctamente el PT ni verificado el estado del equipo.', correct: true, feedback: 'Correcto. Si el PT se hubiera cerrado correctamente con verificación del estado del equipo, quien arrancó el horno habría tenido esa información. La falta de conocimiento es una consecuencia del fallo de procedimiento.' },
+      { text: 'Porque no se restablecieron las condiciones de seguridad previas a la reparación — las protecciones no se recolocaron y el PT no se cerró adecuadamente.', correct: true, feedback: 'Correcto. Esta es la causa directa: la tarea finalizó sin restaurar el estado seguro del equipo y sin cerrar el PT. Ambas respuestas están relacionadas — una es consecuencia de la otra.' },
+      { text: 'Porque el equipo arranca automáticamente cuando termina el mantenimiento.', correct: false, feedback: 'Los datos no indican un arranque automático. Alguien tomó la decisión de arrancar el horno sin verificar el estado del equipo.' },
+    ],
+    feedbackAll: 'Las dos primeras respuestas son correctas y están relacionadas: el PT no se cerró correctamente ni se verificó el estado del equipo (causa), y por eso quien arrancó el horno no tenía esa información (consecuencia). Ambas son válidas como respuesta a esta pregunta.'
+  },
+  {
+    question: '¿Por qué no se restablecieron las condiciones de seguridad?',
+    context: 'El procedimiento de consignación (LOTO) y el Permiso de Trabajo existen precisamente para garantizar este restablecimiento. ¿Qué falló en su aplicación?',
+    options: [
+      { text: 'Porque el técnico que realizó la reparación tenía prisa por terminar.', correct: false, feedback: 'La prisa puede ser un factor contributivo, pero no explica por qué el sistema de control — PT y LOTO — no lo detectó y lo impidió. La causa está en el fallo de procedimiento, no en la actitud individual.' },
+      { text: 'Porque el procedimiento de consignación (LOTO) no se siguió en su totalidad: no se verificó el estado del equipo antes del rearranque ni se cerró correctamente el PT.', correct: true, feedback: 'Correcto. El LOTO incluye explícitamente la verificación del estado del equipo antes de la puesta en marcha. Ese paso no se realizó. El PT tampoco se cerró correctamente, lo que significa que el proceso formal de finalización de la tarea no se completó. Continuamos.' },
+      { text: 'Porque las protecciones eran difíciles de colocar y requería demasiado tiempo.', correct: false, feedback: 'Los datos no mencionan dificultad técnica para colocar las protecciones. Si fuera así, sería un factor de equipo relevante — pero no es la causa de que no se siguiera el procedimiento de verificación.' },
+    ]
+  },
+  {
+    question: '¿Por qué el procedimiento de LOTO no se siguió en su totalidad?',
+    context: 'El informe menciona que esta disfunción ya se había detectado en otras tareas. ¿Qué nos dice eso sobre la causa?',
+    options: [
+      { text: 'Porque fue un error puntual de ese día — normalmente el procedimiento se sigue correctamente.', correct: false, feedback: 'El propio informe de la planta indica que esta disfunción ya se había detectado en otras tareas. No es un error puntual: es un patrón. Eso cambia completamente el nivel de la causa raíz.' },
+      { text: 'Porque la formación sobre PT y LOTO no está siendo suficientemente efectiva — la disfunción es recurrente y no se ha resuelto con las acciones anteriores.', correct: true, feedback: '¡Muy bien! La recurrencia es clave. Si una disfunción aparece en varias tareas distintas, la causa no está en la tarea específica sino en el sistema de formación, seguimiento y refuerzo de los procedimientos. Una pregunta más.' },
+      { text: 'Porque los procedimientos de PT y LOTO son demasiado complejos para aplicarlos en tareas cortas.', correct: false, feedback: 'La complejidad percibida de los procedimientos podría ser un factor contributivo, pero no explica la recurrencia del problema en múltiples tareas. La causa está en el sistema de formación y supervisión, no en la complejidad del procedimiento.' },
+    ]
+  },
+  {
+    question: '¿Por qué la formación sobre PT y LOTO no está siendo efectiva?',
+    context: 'Esta es la pregunta final. Busca el fallo del sistema que, si se corrige, evitará que este patrón continúe.',
+    options: [
+      { text: 'Porque los trabajadores no se toman en serio los procedimientos de seguridad.', correct: false, feedback: 'Esta respuesta culpa a las personas y no lleva a ninguna acción correctiva estructural. Además, no es una causa raíz — es una descripción de comportamiento. ¿Por qué no se toman en serio los procedimientos? Esa sería la pregunta correcta.' },
+      { text: 'Porque la formación se imparte pero no se verifica su aplicación real en el puesto de trabajo, y no existe un mecanismo de seguimiento que detecte y corrija el incumplimiento antes de que se produzca un evento.', correct: true, feedback: '¡Causa raíz identificada! La formación existe, pero no está conectada a un sistema de verificación en campo. Sin seguimiento real, la formación queda en el papel. Este es el fallo sistémico que hay que corregir.' },
+      { text: 'Porque el último refresco de formación fue hace demasiado tiempo.', correct: false, feedback: 'La frecuencia de la formación puede ser un factor, pero no es la causa raíz. Si la formación no está ligada a verificación en campo, repetirla más frecuentemente no resolverá el patrón de incumplimiento.' },
+    ]
+  }
+];
+
+const rootCause = 'La formación sobre Permisos de Trabajo y LOTO no está conectada a un sistema de verificación de su aplicación real en el puesto de trabajo. Sin un mecanismo de seguimiento que detecte y corrija el incumplimiento antes de un evento, la disfunción se repite en distintas tareas a pesar de que la formación existe.';
+
+const correctiveActions = [
+  'Diseñar un sistema de verificación en campo de la aplicación de PT y LOTO (observaciones planificadas, auditorías de tarea, SIM inspections).',
+  'Revisar el checklist del PT para incluir como paso obligatorio la verificación de protecciones y condiciones de seguridad antes del cierre.',
+  'Identificar todas las tareas donde se ha detectado esta disfunción y aplicar el refresco de formación de forma estructurada.',
+  'Establecer un indicador de seguimiento del cumplimiento de PT/LOTO como KPI de cultura preventiva.',
+];
+
+// ── STATE ──────────────────────────────────────────────────────────────
+let currentWhy = 0;
+let whyResults = [];
+let currentPhase = 1;
+let sipPassed = false;
+let factorsPassed = false;
+const completionCode = 'QX7N-4K9P-2V8R';
+
+// ── BACK NAVIGATION ───────────────────────────────────────────────────────
+function goBack(fromPhase) {
+  document.getElementById('phase-' + fromPhase).style.display = 'none';
+  const toPhase = fromPhase - 1;
+  currentPhase = toPhase;
+  document.getElementById('phase-' + toPhase).style.display = 'block';
+  updateProgress(toPhase);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── SIP DECISION ───────────────────────────────────────────────────────
+function answerSIP(isSIP) {
+  const fb = document.getElementById('sip-feedback');
+  const yesBtn = document.getElementById('sip-yes');
+  const noBtn = document.getElementById('sip-no');
+  yesBtn.disabled = true;
+  noBtn.disabled = true;
+
+  fb.style.display = 'block';
+
+  if (isSIP) {
+    sipPassed = true;
+    playCorrect();
+    yesBtn.className = 'option-btn selected-correct';
+    fb.style.background = '#e8f5e9';
+    fb.style.border = '1px solid #a5d6a7';
+    fb.style.color = '#1b5e20';
+    fb.innerHTML = '✅ <strong>Correcto.</strong> Este evento debe clasificarse como SIP. Un rodillo en movimiento sin protección representa un riesgo de atrapamiento con potencial de causar lesiones graves o mortales — amputación, aplastamiento, arrastre. El hecho de que no hubiera nadie presente en ese momento no reduce el potencial: la condición existía y era accesible. Declararlo SIP obliga a analizarlo con el mismo rigor que un accidente grave.';
+  } else {
+    sipPassed = false;
+    playWrong();
+    noBtn.className = 'option-btn selected-wrong';
+    yesBtn.className = 'option-btn revealed-correct';
+    fb.style.background = '#fff8e1';
+    fb.style.border = '1px solid #ffe082';
+    fb.style.color = '#5c4000';
+    fb.innerHTML = '⚠️ <strong>Repasa el criterio SIP.</strong> Un IF5 es suficiente para reportar la condición insegura — pero el SIP se declara cuando esa condición tiene potencial de causar una lesión grave o mortal. Rodillos en movimiento sin protección en una zona accesible cumplen ese criterio: el potencial de atrapamiento, aplastamiento o amputación es real y directo. No hace falta que alguien haya estado a punto de sufrir la lesión — basta con que la condición lo haga posible.';
+  }
+
+  setTimeout(() => {
+    const btn = document.getElementById('phase1-btn');
+    btn.style.display = 'flex';
+    btn.style.justifyContent = 'flex-end';
+  }, 600);
+}
+
+// ── NAVIGATION ─────────────────────────────────────────────────────────
+function goPhase(n) {
+  document.getElementById('phase-' + currentPhase).style.display = 'none';
+  currentPhase = n;
+  document.getElementById('phase-' + n).style.display = 'block';
+  updateProgress(n);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (n === 2) renderWhyChain();
+  if (n === 3) showCausalChain();
+}
+
+function updateProgress(phase) {
+  [1,2,3,4,5].forEach(i => {
+    const sc = document.getElementById('sc-' + i);
+    const sl = document.getElementById('sl-' + i);
+    sc.className = 'step-circle' + (i < phase ? ' done' : i === phase ? ' active' : '');
+    if (sl && sl.style.visibility !== 'hidden') sl.className = 'step-line' + (i < phase ? ' done' : '');
+  });
+}
+
+// ── WHY CHAIN ──────────────────────────────────────────────────────────
+function renderWhyChain() {
+  const container = document.getElementById('why-chain');
+  container.innerHTML = '';
+  whys.forEach((why, idx) => {
+    const step = document.createElement('div');
+    step.className = 'why-step' + (idx === 0 ? ' active' : ' locked');
+    step.id = 'why-step-' + idx;
+    const multiHint = why.multi ? '<div class="multi-hint">⚠️ Puede haber más de una respuesta correcta — selecciona todas las que apliquen.</div>' : '';
+    const optionsHTML = why.options.map((opt, oi) => {
+      if (why.multi) {
+        return `<button class="option-btn" id="opt-${idx}-${oi}" onclick="toggleMulti(${idx},${oi})" data-selected="false">${opt.text}</button>`;
+      }
+      return `<button class="option-btn" id="opt-${idx}-${oi}" onclick="selectOption(${idx},${oi})">${opt.text}</button>`;
+    }).join('');
+    const confirmBtn = why.multi ? `<button class="confirm-btn" id="confirm-${idx}" onclick="confirmMulti(${idx})">Confirmar selección →</button>` : '';
+    step.innerHTML = `
+      <div class="why-num">${idx + 1}</div>
+      <div class="why-content">
+        <div class="why-question">Por qué ${idx + 1}: ${why.question}</div>
+        <div class="why-context">${why.context}</div>
+        <div class="options-list" id="options-${idx}">
+          ${idx === 0 ? (multiHint + optionsHTML + confirmBtn) : `<div class="locked-msg">Se desbloqueará cuando respondas la pregunta anterior.</div>`}
+        </div>
+        <div class="why-feedback" id="fb-${idx}"></div>
+      </div>`;
+    container.appendChild(step);
+  });
+}
+
+function toggleMulti(whyIdx, optIdx) {
+  const btn = document.getElementById(`opt-${whyIdx}-${optIdx}`);
+  const isSelected = btn.dataset.selected === 'true';
+  btn.dataset.selected = isSelected ? 'false' : 'true';
+  btn.className = isSelected ? 'option-btn' : 'option-btn selected-multi';
+}
+
+function confirmMulti(whyIdx) {
+  const why = whys[whyIdx];
+  const selected = why.options.map((_, oi) => {
+    const btn = document.getElementById(`opt-${whyIdx}-${oi}`);
+    return btn && btn.dataset.selected === 'true';
+  });
+
+  if (!selected.some(Boolean)) {
+    alert('Selecciona al menos una opción antes de confirmar.');
+    return;
+  }
+
+  // Disable all buttons and confirm button
+  why.options.forEach((_, oi) => {
+    const btn = document.getElementById(`opt-${whyIdx}-${oi}`);
+    if (btn) btn.disabled = true;
+  });
+  const confirmBtn = document.getElementById(`confirm-${whyIdx}`);
+  if (confirmBtn) confirmBtn.disabled = true;
+
+  const fb = document.getElementById('fb-' + whyIdx);
+  const correctIndices = why.options.map((o, i) => o.correct ? i : -1).filter(i => i >= 0);
+  const selectedCorrect = correctIndices.filter(i => selected[i]);
+  const selectedWrong = selected.map((s, i) => s && !why.options[i].correct ? i : -1).filter(i => i >= 0);
+  const missedCorrect = correctIndices.filter(i => !selected[i]);
+
+  // Style buttons
+  why.options.forEach((opt, oi) => {
+    const btn = document.getElementById(`opt-${whyIdx}-${oi}`);
+    if (!btn) return;
+    if (opt.correct && selected[oi]) btn.className = 'option-btn selected-correct';
+    else if (!opt.correct && selected[oi]) btn.className = 'option-btn selected-wrong';
+    else if (opt.correct && !selected[oi]) btn.className = 'option-btn revealed-correct';
+    else btn.className = 'option-btn';
+  });
+
+  const allCorrectSelected = selectedCorrect.length === correctIndices.length && selectedWrong.length === 0;
+
+  fb.classList.add('show');
+  if (allCorrectSelected) {
+    playCorrect();
+    fb.className = 'why-feedback show correct';
+    fb.innerHTML = '✅ ' + (why.feedbackAll || 'Correcto. Has identificado todas las respuestas válidas.');
+    document.getElementById('why-step-' + whyIdx).className = 'why-step answered';
+    whyResults.push(true);
+    setTimeout(() => unlockNext(whyIdx), 2200);
+  } else {
+    playWrong();
+    fb.className = 'why-feedback show wrong';
+    let msg = '⚠️ ';
+    if (selectedWrong.length > 0) msg += 'Has marcado una opción incorrecta. ';
+    if (missedCorrect.length > 0) msg += `Has dejado sin marcar ${missedCorrect.length === 1 ? 'una opción correcta' : 'algunas opciones correctas'}. `;
+    msg += '<br><br>' + (why.feedbackAll || 'Revisa las opciones marcadas en verde — esas son las respuestas válidas.');
+    fb.innerHTML = msg;
+    whyResults.push(false);
+    setTimeout(() => unlockNext(whyIdx), 3000);
+  }
+}
+
+function selectOption(whyIdx, optIdx) {
+  if (whyIdx !== currentWhy) return;
+  const why = whys[whyIdx];
+  const opt = why.options[optIdx];
+  const fb = document.getElementById('fb-' + whyIdx);
+  document.querySelectorAll(`[id^="opt-${whyIdx}-"]`).forEach(b => b.disabled = true);
+  const clickedBtn = document.getElementById(`opt-${whyIdx}-${optIdx}`);
+  if (opt.correct) {
+    playCorrect();
+    clickedBtn.className = 'option-btn selected-correct';
+    fb.className = 'why-feedback show correct';
+    fb.innerHTML = '✅ ' + opt.feedback;
+    document.getElementById('why-step-' + whyIdx).className = 'why-step answered';
+    whyResults.push(true);
+    setTimeout(() => unlockNext(whyIdx), 1800);
+  } else {
+    playWrong();
+    clickedBtn.className = 'option-btn selected-wrong';
+    fb.className = 'why-feedback show wrong';
+    fb.innerHTML = '⚠️ ' + opt.feedback;
+    whyResults.push(false);
+    why.options.forEach((o, i) => {
+      if (o.correct) document.getElementById(`opt-${whyIdx}-${i}`).className = 'option-btn revealed-correct';
+    });
+    setTimeout(() => unlockNext(whyIdx), 2800);
+  }
+}
+
+function unlockNext(whyIdx) {
+  const next = whyIdx + 1;
+  if (next < whys.length) {
+    currentWhy = next;
+    const why = whys[next];
+    const nextStep = document.getElementById('why-step-' + next);
+    nextStep.className = 'why-step active';
+    const multiHint = why.multi ? '<div class="multi-hint">⚠️ Puede haber más de una respuesta correcta — selecciona todas las que apliquen.</div>' : '';
+    const optionsHTML = why.options.map((opt, oi) => {
+      if (why.multi) {
+        return `<button class="option-btn" id="opt-${next}-${oi}" onclick="toggleMulti(${next},${oi})" data-selected="false">${opt.text}</button>`;
+      }
+      return `<button class="option-btn" id="opt-${next}-${oi}" onclick="selectOption(${next},${oi})">${opt.text}</button>`;
+    }).join('');
+    const confirmBtn = why.multi ? `<button class="confirm-btn" id="confirm-${next}" onclick="confirmMulti(${next})">Confirmar selección →</button>` : '';
+    document.getElementById('options-' + next).innerHTML = multiHint + optionsHTML + confirmBtn;
+    nextStep.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  } else {
+    playCelebrate();
+    setTimeout(() => goPhase(3), 600);
+  }
+}
+
+// ── CAUSAL CHAIN ───────────────────────────────────────────────────────
+function showCausalChain() {
+  setTimeout(() => {
+    document.getElementById('root-row').style.display = 'flex';
+    document.getElementById('root-text').textContent = rootCause;
+  }, 800);
+  setTimeout(() => {
+    const box = document.getElementById('root-cause-box');
+    box.classList.add('show');
+    document.getElementById('root-cause-text').textContent = rootCause;
+    document.getElementById('corrective-list').innerHTML = correctiveActions.map(a => `<li>${a}</li>`).join('');
+    playCelebrate();
+  }, 1800);
+  setTimeout(() => {
+    document.getElementById('real-actions-box').classList.add('show');
+  }, 2600);
+  setTimeout(() => {
+    const btn = document.getElementById('phase3-btn');
+    btn.style.display = 'flex';
+    btn.style.justifyContent = 'flex-end';
+  }, 3200);
+}
+
+// ── CONTRIBUTING FACTORS ───────────────────────────────────────────────
+const expectedFactors = ['fc1','fc4','fc5','fc7','fc8','fc9','fc10','fc11','fc12'];
+const plausibleFactors = ['fc2','fc3','fc6'];
+
+function checkFactors() {
+  const checked = [];
+  for (let i = 1; i <= 12; i++) {
+    if (document.getElementById('fc' + i) && document.getElementById('fc' + i).checked) checked.push('fc' + i);
+  }
+  if (checked.length === 0) { alert('Selecciona al menos un factor contributivo antes de revisar.'); return; }
+
+  const hitExpected = checked.filter(f => expectedFactors.includes(f)).length;
+  const fb = document.getElementById('factors-feedback');
+  fb.classList.add('show');
+
+  if (hitExpected >= 5) {
+    factorsPassed = true;
+    playCorrect();
+    fb.className = 'factors-feedback show good';
+    fb.innerHTML = `✅ <strong>Buen análisis.</strong> Los factores organizativos son los más relevantes en este caso: la disfunción recurrente con PT y LOTO, la ausencia de verificación en campo, y la falta de supervisión en el rearranque. Los factores de equipo (ausencia de enclavamiento, falta de sensor de posición en protecciones) también son muy pertinentes — aunque requieren mayor inversión, eliminarían el riesgo de forma definitiva.`;
+  } else {
+    factorsPassed = false;
+    playWrong();
+    fb.className = 'factors-feedback show ok';
+    fb.innerHTML = `⚠️ Has marcado ${checked.length} factor(es). En este caso los más directamente respaldados por los datos son los organizativos: disfunción recurrente ya detectada, ausencia de seguimiento de la aplicación de PT/LOTO, y falta de supervisión en rearranques. Los factores de equipo (enclavamiento, sensores) también merecen consideración aunque no estén en los datos inmediatos.`;
+  }
+
+  setTimeout(() => {
+    document.querySelector('#phase-4 .btn-primary').textContent = 'Continuar →';
+    document.querySelector('#phase-4 .btn-primary').onclick = () => goPhase(5);
+  }, 1000);
+}
+
+// ── COMPLETION ─────────────────────────────────────────────────────────
+function complete() {
+  const scoredItems = [sipPassed, ...whyResults.slice(0, 5), factorsPassed];
+  const correctCount = scoredItems.filter(Boolean).length;
+  const totalCount = scoredItems.length;
+  const percentage = Math.round((correctCount / totalCount) * 100);
+
+  document.getElementById('phase-5').style.display = 'none';
+  document.getElementById('completion').classList.add('show');
+  updateProgress(6);
+
+  const title = document.getElementById('completion-title');
+  const message = document.getElementById('completion-message');
+  const meta = document.getElementById('completion-meta');
+  const codeBox = document.getElementById('completion-code-box');
+  const codeValue = document.getElementById('completion-code');
+  const retryBox = document.getElementById('completion-retry-box');
+
+  meta.textContent = `Resultado: ${correctCount}/${totalCount} · ${percentage}%`;
+
+  if (percentage >= 70) {
+    title.textContent = 'Caso real superado';
+    message.textContent = 'Has alcanzado el nivel mínimo requerido en la actividad. Copia tu código de continuación, regresa al módulo y úsalo para desbloquear el siguiente paso antes de realizar el quiz oficial.';
+    codeValue.textContent = completionCode;
+    codeBox.style.display = 'block';
+    retryBox.style.display = 'none';
+    playCelebrate();
+  } else {
+    title.textContent = 'Aún no has superado la actividad';
+    message.textContent = 'No has alcanzado el 70% mínimo requerido. Repite el caso, revisa los razonamientos y vuelve a intentarlo. El código solo aparece cuando superas la actividad.';
+    codeBox.style.display = 'none';
+    retryBox.style.display = 'block';
+    playWrong();
+  }
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function restart() {
+  currentWhy = 0; whyResults = []; currentPhase = 1; sipPassed = false; factorsPassed = false;
+  document.getElementById('completion').classList.remove('show');
+  [2,3,4,5].forEach(i => document.getElementById('phase-' + i).style.display = 'none');
+  document.getElementById('root-row').style.display = 'none';
+  document.getElementById('root-cause-box').classList.remove('show');
+  document.getElementById('real-actions-box').classList.remove('show');
+  document.getElementById('phase3-btn').style.display = 'none';
+  document.getElementById('factors-feedback').classList.remove('show');
+  document.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked = false);
+  // Reset SIP question
+  document.getElementById('sip-feedback').style.display = 'none';
+  document.getElementById('sip-yes').className = 'option-btn';
+  document.getElementById('sip-yes').disabled = false;
+  document.getElementById('sip-no').className = 'option-btn';
+  document.getElementById('sip-no').disabled = false;
+  document.getElementById('phase1-btn').style.display = 'none';
+  document.getElementById('phase-1').style.display = 'block';
+  updateProgress(1);
+}
+</script>
+</body>
+</html>
