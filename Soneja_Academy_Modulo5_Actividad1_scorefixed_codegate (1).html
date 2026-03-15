@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Módulo 5 · Actividad · Gestiona el ciclo de mejora</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-height: 100vh; padding: 24px; }
+
+  .header {
+    background: linear-gradient(135deg, #1B2A4A 0%, #2C4A7A 100%);
+    color: white; border-radius: 16px; padding: 28px 32px; margin-bottom: 24px;
+  }
+  .header-label { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #4DB8A4; margin-bottom: 8px; }
+  .header h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+  .header p { font-size: 13px; color: #a0b4cc; line-height: 1.6; max-width: 620px; }
+
+  .instructions {
+    background: white; border-radius: 12px; padding: 16px 20px; margin-bottom: 20px;
+    border-left: 4px solid #4DB8A4; font-size: 13px; color: #444; line-height: 1.6;
+  }
+
+  /* PROGRESS */
+  .progress-bar {
+    background: white; border-radius: 12px; padding: 14px 24px; margin-bottom: 20px;
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  }
+  .progress-dots { display: flex; gap: 8px; }
+  .dot {
+    width: 32px; height: 32px; border-radius: 50%; background: #e0e8f0; color: #888;
+    font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+    transition: all 0.3s;
+  }
+  .dot.current { background: #1B2A4A; color: white; transform: scale(1.1); }
+  .dot.done { background: #4DB8A4; color: white; }
+  .dot.partial { background: #ffb74d; color: white; }
+  .progress-label { font-size: 13px; color: #666; margin-left: auto; }
+
+  /* EVENT CARD */
+  .event-card { background: white; border-radius: 16px; padding: 28px; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+  .event-num { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #4DB8A4; margin-bottom: 10px; }
+
+  .event-box {
+    background: #fff8e1; border: 1px solid #ffe082; border-radius: 12px;
+    padding: 18px 22px; margin-bottom: 24px;
+  }
+  .event-box.critical { background: #ffebee; border-color: #ef9a9a; }
+  .event-box.high { background: #fff3e0; border-color: #ffcc80; }
+  .event-label { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
+  .event-label.critical { color: #c62828; }
+  .event-label.high { color: #e65100; }
+  .event-label.warning { color: #f57f17; }
+  .event-text { font-size: 14px; color: #1B2A4A; line-height: 1.8; }
+  .event-detail { font-size: 12px; color: #666; font-style: italic; margin-top: 8px; line-height: 1.5; }
+  .event-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 12px; margin-right: 6px; margin-top: 8px;
+  }
+  .badge-if5 { background: #fce4ec; color: #c62828; border: 1px solid #f48fb1; }
+  .badge-if4 { background: #fff3e0; color: #e65100; border: 1px solid #ffcc80; }
+  .badge-soneja { background: #e3f2fd; color: #1565c0; border: 1px solid #90caf9; }
+  .badge-sg { background: #f3e5f5; color: #6a1b9a; border: 1px solid #ce93d8; }
+
+  /* STEP SECTIONS */
+  .step-section { margin-bottom: 24px; border: 0.5px solid #e0e8f0; border-radius: 12px; overflow: hidden; }
+  .step-header {
+    background: #f7f9fc; padding: 12px 18px; display: flex; align-items: center; gap: 12px;
+    border-bottom: 0.5px solid #e0e8f0;
+  }
+  .step-num-circle {
+    width: 28px; height: 28px; border-radius: 50%; background: #1B2A4A; color: white;
+    font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .step-num-circle.done { background: #4DB8A4; }
+  .step-title { font-size: 13px; font-weight: 700; color: #1B2A4A; }
+  .step-subtitle { font-size: 11px; color: #888; margin-left: auto; }
+  .step-body { padding: 16px 18px; }
+
+  /* OPTIONS */
+  .options-list { display: flex; flex-direction: column; gap: 8px; }
+  .opt-btn {
+    background: white; border: 2px solid #e0e8f0; border-radius: 10px;
+    padding: 12px 16px; font-size: 13px; color: #1B2A4A; cursor: pointer;
+    text-align: left; transition: all 0.2s; font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.5;
+    display: flex; align-items: flex-start; gap: 10px;
+  }
+  .opt-btn:hover:not(:disabled) { border-color: #4DB8A4; background: #eaf9f5; }
+  .opt-btn .opt-label {
+    font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 8px;
+    white-space: nowrap; flex-shrink: 0; margin-top: 2px;
+  }
+  .opt-btn.selected-correct { border-color: #2e7d32; background: #e8f5e9; pointer-events: none; }
+  .opt-btn.selected-wrong { border-color: #c62828; background: #ffebee; pointer-events: none; animation: shake 0.35s ease; }
+  .opt-btn.revealed { border-color: #2e7d32; background: #f1f8f1; pointer-events: none; }
+  .opt-btn:disabled { opacity: 0.45; pointer-events: none; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
+
+  /* PRIORITY GRID */
+  .priority-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .pri-btn {
+    background: white; border: 2px solid #e0e8f0; border-radius: 10px;
+    padding: 14px 16px; cursor: pointer; text-align: center; transition: all 0.2s;
+    font-family: 'Segoe UI', Arial, sans-serif;
+  }
+  .pri-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+  .pri-btn .pri-dot { width: 12px; height: 12px; border-radius: 50%; margin: 0 auto 6px; }
+  .pri-btn .pri-name { font-size: 13px; font-weight: 700; color: #1B2A4A; }
+  .pri-btn .pri-desc { font-size: 11px; color: #888; margin-top: 3px; }
+  .pri-btn.selected-correct { border-color: #2e7d32; background: #e8f5e9; pointer-events: none; }
+  .pri-btn.selected-wrong { border-color: #c62828; background: #ffebee; pointer-events: none; animation: shake 0.35s ease; }
+  .pri-btn.revealed { border-color: #2e7d32; background: #f1f8f1; pointer-events: none; }
+  .pri-btn:disabled { opacity: 0.45; pointer-events: none; }
+
+  /* MULTI-SELECT ACTIONS */
+  .action-check {
+    display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px;
+    cursor: pointer; padding: 10px 14px; border-radius: 10px; transition: background 0.15s;
+    border: 2px solid #e0e8f0; background: white;
+  }
+  .action-check:hover { background: #f7f9fc; border-color: #c0cdd8; }
+  .action-check.selected { border-color: #1B2A4A; background: #f0f4f8; }
+  .action-check.correct-action { border-color: #2e7d32; background: #e8f5e9; pointer-events: none; }
+  .action-check.wrong-action { border-color: #c62828; background: #ffebee; pointer-events: none; }
+  .action-check.missed-action { border-color: #f57f17; background: #fff8e1; pointer-events: none; }
+  .action-check input[type="checkbox"] { accent-color: #1B2A4A; width: 15px; height: 15px; flex-shrink: 0; margin-top: 2px; cursor: pointer; }
+  .action-check label { font-size: 13px; color: #1B2A4A; line-height: 1.5; cursor: pointer; }
+
+  .confirm-btn {
+    margin-top: 10px; padding: 10px 22px; border-radius: 20px; font-size: 12px; font-weight: 700;
+    cursor: pointer; border: none; background: #1B2A4A; color: white; transition: all 0.2s;
+    font-family: 'Segoe UI', Arial, sans-serif;
+  }
+  .confirm-btn:hover { background: #2C4A7A; }
+  .confirm-btn:disabled { opacity: 0.4; pointer-events: none; }
+
+  /* FEEDBACK */
+  .step-feedback {
+    margin-top: 12px; border-radius: 8px; padding: 12px 16px;
+    font-size: 12px; line-height: 1.6; display: none;
+  }
+  .step-feedback.show { display: block; }
+  .step-feedback.correct { background: #e8f5e9; border: 1px solid #a5d6a7; color: #1b5e20; }
+  .step-feedback.wrong { background: #fff8e1; border: 1px solid #ffe082; color: #5c4000; }
+  .step-feedback.info { background: #e3f2fd; border: 1px solid #90caf9; color: #0d47a1; }
+
+  .locked-msg { font-size: 12px; color: #aaa; font-style: italic; padding: 6px 0; }
+
+  /* NEXT / FINAL */
+  .btn {
+    padding: 11px 24px; border-radius: 22px; font-size: 13px; font-weight: 700;
+    cursor: pointer; border: none; transition: all 0.2s; letter-spacing: 0.5px;
+  }
+  .btn-primary { background: #1B2A4A; color: white; }
+  .btn-primary:hover { background: #2C4A7A; }
+  .btn-teal { background: #4DB8A4; color: white; }
+  .btn-teal:hover { background: #3a9a88; }
+  .btn-outline-white { background: transparent; color: white; border: 2px solid rgba(255,255,255,0.4); }
+  .btn-outline-white:hover { background: rgba(255,255,255,0.1); }
+
+  /* FINAL */
+  .final-card {
+    background: linear-gradient(135deg, #1B2A4A, #2C4A7A); color: white;
+    border-radius: 16px; padding: 40px 32px; text-align: center; display: none; margin-bottom: 20px;
+    animation: fadeInUp 0.5s ease;
+  }
+  .final-card.show { display: block; }
+  @keyframes fadeInUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+  .final-icon { font-size: 52px; margin-bottom: 14px; }
+  .final-score { font-size: 44px; font-weight: 800; margin-bottom: 6px; }
+  .final-label { font-size: 13px; color: #a0b4cc; margin-bottom: 20px; }
+  .final-msg { font-size: 14px; color: #d0dce8; line-height: 1.7; max-width: 520px; margin: 0 auto 24px; }
+  .summary-strip { display: flex; gap: 8px; justify-content: center; margin-bottom: 20px; }
+  .summary-pip { width: 36px; height: 8px; border-radius: 4px; background: rgba(255,255,255,0.15); }
+  .summary-pip.full { background: #4DB8A4; }
+  .summary-pip.partial { background: #ffb74d; }
+  .summary-pip.empty { background: #e57373; }
+
+  @media(max-width:600px){ .priority-grid{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-label">Módulo 5 · Actividad · Nivel: Aplicar</div>
+  <h1>Gestiona el ciclo de mejora</h1>
+  <p>Cuatro eventos reales del Grupo SG con contratas. Para cada uno: asigna la prioridad correcta, determina el responsable, define las acciones y decide si el evento puede cerrarse.</p>
+</div>
+
+<div class="instructions">
+  <strong>¿Cómo funciona?</strong> Cada evento tiene tres decisiones: prioridad, responsable principal, y acciones correctivas (puedes seleccionar varias). Al final de cada evento decides si el ciclo puede cerrarse o si falta algo. Aplica lo que has aprendido en el módulo.
+</div>
+
+<div class="progress-bar">
+  <div class="progress-dots">
+    <div class="dot current" id="dot-1">1</div>
+    <div class="dot" id="dot-2">2</div>
+    <div class="dot" id="dot-3">3</div>
+    <div class="dot" id="dot-4">4</div>
+  </div>
+  <div class="progress-label" id="progress-label">Evento 1 de 4</div>
+</div>
+
+<div id="event-container"></div>
+<div id="final-card" class="final-card"></div>
+
+<script>
+// ── AUDIO ──────────────────────────────────────────────────────────────
+let audioCtx = null;
+function getCtx() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); return audioCtx; }
+function playTone(freqs, type, vol, dur) {
+  try {
+    const ctx = getCtx(); if (ctx.state==='suspended') ctx.resume();
+    freqs.forEach((f,i) => {
+      const o=ctx.createOscillator(), g=ctx.createGain();
+      o.connect(g); g.connect(ctx.destination); o.type=type; o.frequency.value=f;
+      const t=ctx.currentTime+i*0.12;
+      g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+      o.start(t); o.stop(t+dur+0.05);
+    });
+  } catch(e){}
+}
+function playCorrect()   { playTone([523.25,783.99],'sine',0.20,0.35); }
+function playWrong()     { playTone([180],'sawtooth',0.13,0.22); }
+function playCelebrate() { playTone([523.25,659.25,783.99,1046.5],'sine',0.18,0.45); }
+document.addEventListener('mousedown',()=>{ if(audioCtx&&audioCtx.state==='suspended') audioCtx.resume(); },{once:true});
+
+// ── DATA ───────────────────────────────────────────────────────────────
+const PRIORITIES = [
+  { id:'critical', dot:'#e53935', name:'🔴 Crítica', desc:'Riesgo inminente — parada inmediata si necesario' },
+  { id:'high',     dot:'#fb8c00', name:'🟡 Alta',    desc:'Riesgo significativo — acción en menos de 7 días' },
+  { id:'medium',   dot:'#43a047', name:'🟢 Media',   desc:'Riesgo controlable — acción en menos de 30 días' },
+  { id:'low',      dot:'⚪ Baja',  name:'⚪ Baja',    desc:'Mejora sin riesgo inmediato — plan a medio plazo' },
+];
+
+const events = [
+  // ── EVENT 1: LOTO incorrecto (Soneja) ────────────────────────────────
+  {
+    num: 1,
+    badge: 'IF5',
+    origin: 'Planta SG · Soneja',
+    isOwn: true,
+    title: 'Contrata no aplica LOTO correctamente',
+    scene: 'Una contrata está instalando un variador en la turbina de la ensacadora 2. Al acceder, coloca el candado en la puerta para eliminar la energía eléctrica, pero no aplica LOTO para eliminar la energía neumática. La máquina tiene energía residual activa mientras el trabajador opera en su interior.',
+    detail: 'Este evento ocurre en la propia planta de Soneja. El LOTO incorrecto deja al trabajador expuesto a un rearranque neumático accidental con consecuencias potencialmente graves.',
+    priority: 'critical',
+    priorityFeedback: 'Correcto. Un trabajador en el interior de una máquina con energía residual activa es un riesgo inminente de atrapamiento o aplastamiento grave. La prioridad es Crítica — implica parada inmediata del trabajo hasta que el LOTO esté correctamente aplicado.',
+    priorityWrongFeedback: 'El riesgo aquí es inmediato: hay un trabajador dentro de la máquina con energía neumática activa. Eso es exposición directa de personas a riesgo de lesión grave. La prioridad Crítica implica parada inmediata — no se puede esperar 7 días ni 30.',
+
+    responsible: 'ehs_supervisor',
+    responsibleOptions: [
+      { id:'worker', label:'Trabajador de la contrata', correct: false, feedback:'El trabajador es quien debe aplicar el LOTO correctamente, pero la responsabilidad de gestionar el ciclo de mejora — análisis, acciones correctivas, seguimiento — recae en el equipo EHS y el mando responsable del área.' },
+      { id:'ehs_supervisor', label:'Equipo de Dirección de la fábrica + responsable de turno del área', correct: true, feedback:'Correcto. El responsable de turno detiene el trabajo de inmediato. El equipo EHS lidera el análisis causal, coordina con la empresa contratista las acciones correctivas y hace seguimiento. La contrata también tiene responsabilidades en el plan de acción.' },
+      { id:'contractor_mgr', label:'Responsable de la empresa contratista, de forma autónoma', correct: false, feedback:'La empresa contratista tiene responsabilidades en el plan de acción, pero el ciclo de mejora dentro de la planta es liderado por el equipo EHS de Saint-Gobain. La gestión del evento en el sistema EHS es responsabilidad de la planta.' },
+    ],
+
+    actions: [
+      { id:'a1', text:'Parar el trabajo inmediatamente y no reanudarlo hasta que el LOTO esté correctamente aplicado a todas las fuentes de energía.', correct: true },
+      { id:'a2', text:'Verificar con la contrata que su procedimiento de LOTO incluye todas las fuentes de energía de esta máquina (eléctrica y neumática).', correct: true },
+      { id:'a3', text:'Incluir la verificación de LOTO en el checklist de inicio de trabajos de contratas en planta.', correct: true },
+      { id:'a4', text:'Registrar el evento en el sistema EHS y comunicarlo a la contrata por escrito.', correct: true },
+      { id:'a5', text:'Permitir que la contrata continúe el trabajo bajo supervisión directa, sin detenerlo.', correct: false },
+      { id:'a6', text:'Cerrar el evento en el sistema una vez que el LOTO ha sido correctamente aplicado ese mismo día.', correct: false },
+    ],
+    actionsFeedback: {
+      allCorrect: '✅ Bien seleccionado. La parada inmediata es la medida provisional obligatoria. Verificar el procedimiento de la contrata y actualizar el checklist son acciones sobre la causa raíz. El registro en el sistema activa el ciclo formal.',
+      hasWrong: '⚠️ Revisa las opciones marcadas en rojo. Continuar el trabajo bajo supervisión no elimina el riesgo — el LOTO debe estar correcto antes de reanudar. Y cerrar el evento el mismo día sin verificar la eficacia de las acciones es un cierre prematuro: el riesgo reaparecerá en el próximo trabajo de la misma contrata.',
+      missed: '⚠️ Has marcado las acciones incorrectas como incorrectas, pero has dejado sin marcar algunas acciones que sí son necesarias.',
+    },
+
+    closureQuestion: 'Han pasado 5 días desde el evento. La contrata ha revisado su procedimiento LOTO y lo ha presentado por escrito, incluyendo la verificación de todas las fuentes de energía. Se ha realizado una sesión de formación con todos sus operarios y ha quedado registrada con firma. El checklist de inicio de trabajos de contratas en planta ha sido actualizado con un punto de verificación explícito de LOTO. El responsable de turno ha verificado en campo que la contrata aplica el procedimiento correctamente en un trabajo posterior. ¿Puede cerrarse el evento?',
+    closureOptions: [
+      { text: 'Sí — todas las acciones sobre la causa raíz están ejecutadas y verificadas en campo. El ciclo está completo y el evento puede cerrarse.', correct: true,
+        feedback: '✅ Correcto. Este es un cierre válido. Se han cumplido todos los criterios: análisis causal documentado, acciones correctivas ejecutadas (procedimiento revisado, formación impartida y registrada, checklist actualizado), y verificación en campo de que el riesgo ha sido eliminado de forma real y duradera. Así es como se cierra un evento correctamente.' },
+      { text: 'No — nunca se puede tener la certeza de que el problema no se repetirá, así que es mejor mantenerlo abierto indefinidamente.', correct: false,
+        feedback: 'Mantener un evento abierto indefinidamente no es gestión — es parálisis. El objetivo del ciclo de mejora es llegar a un cierre real: cuando las acciones sobre la causa raíz están ejecutadas y verificadas en campo, el evento puede y debe cerrarse. Dejarlo abierto sin causa justificada pierde el valor del sistema de seguimiento.' },
+    ],
+  },
+
+  // ── EVENT 2: Intento salida protecciones colectivas ──────────────────
+  {
+    num: 2,
+    badge: 'IF5',
+    origin: 'Planta SG · Grupo',
+    isOwn: false,
+    title: 'Intento de acceso fuera de protecciones colectivas sin arnés',
+    scene: 'Un trabajador de subcontrata está limpiando la parte alta de un silo. Desde una cinta aérea se observa que intenta acceder a una zona fuera de las protecciones colectivas sin arnés ni amarre anticaídas. Se le da el alto inmediato y se paralizan los trabajos.',
+    detail: 'La detección fue por observación casual desde otra zona de la planta. El trabajador no era consciente de que estaba siendo observado.',
+    priority: 'critical',
+    priorityFeedback: 'Correcto. Un trabajador en altura sin arnés ni amarre anticaídas fuera de las protecciones colectivas es un riesgo inminente de caída mortal. Prioridad Crítica — parada inmediata de los trabajos, que ya se realizó en el momento.',
+    priorityWrongFeedback: 'Una caída desde la parte alta de un silo sin ninguna protección anticaídas tiene consecuencias potencialmente mortales. Eso es un riesgo inminente de accidente grave — Prioridad Crítica, que implica parada inmediata.',
+
+    responsible: 'ehs_contractor',
+    responsibleOptions: [
+      { id:'ehs_only', label:'Equipo de Dirección de la fábrica, sin involucrar a la empresa contratista', correct: false, feedback:'El equipo EHS lidera el análisis y el seguimiento en el sistema, pero la empresa contratista debe ser parte activa del plan de acción: debe revisar su procedimiento de trabajos en altura y formar a sus trabajadores. Excluirla del proceso sería incompleto.' },
+      { id:'ehs_contractor', label:'Equipo de Dirección de la fábrica + empresa contratista, con exigencia de plan de acción formal a la contrata', correct: true, feedback:'Correcto. El equipo EHS lidera el ciclo dentro de la planta. La contrata debe aportar un plan de acción que incluya la revisión de su procedimiento de trabajos en altura y la formación a sus trabajadores. SG- Control de contratas exige que esto quede documentado.' },
+      { id:'worker_alone', label:'El trabajador que cometió el acto inseguro, con una advertencia formal', correct: false, feedback:'Una advertencia individual no aborda la causa raíz. La pregunta correcta es: ¿por qué el sistema de control de la contrata permitió que este trabajador llegara a esa situación? El plan de acción debe ir a ese nivel.' },
+    ],
+
+    actions: [
+      { id:'b1', text:'Verificar que la contrata dispone de un procedimiento documentado de trabajos en altura y que sus trabajadores lo conocen.', correct: true },
+      { id:'b2', text:'Exigir a la contrata un plan de acción escrito con plazos y responsables antes de autorizar la reanudación de los trabajos.', correct: true },
+      { id:'b3', text:'Revisar si existen más zonas de acceso sin protección colectiva en el entorno del silo.', correct: true },
+      { id:'b4', text:'Registrar el evento en el sistema EHS con el estándar SG- Trabajos en altura y SG- Control de contratas.', correct: true },
+      { id:'b5', text:'Autorizar la reanudación de los trabajos con la condición de que el trabajador use el arnés a partir de ahora.', correct: false },
+      { id:'b6', text:'No registrar el evento en el sistema porque el trabajador fue detenido antes de que ocurriera la caída.', correct: false },
+    ],
+    actionsFeedback: {
+      allCorrect: '✅ Selección correcta. Verificar el procedimiento de la contrata y exigir un plan de acción escrito son las acciones clave. Revisar el entorno (otras zonas sin protección) aplica el principio de aprender más allá del evento concreto. El registro es obligatorio — un IF5 detectado y detenido sigue siendo un IF5.',
+      hasWrong: '⚠️ Atención a las opciones incorrectas. Autorizar la reanudación con solo "a partir de ahora usa el arnés" no aborda la causa raíz: ¿por qué el trabajador intentó acceder sin él? ¿Hay un procedimiento? ¿Formación? Sin eso, el riesgo persiste. Y no registrar porque fue detenido a tiempo es exactamente el tipo de razonamiento que vacía la base de la pirámide.',
+      missed: '⚠️ Hay acciones necesarias que no has seleccionado. Revisa las marcadas en amarillo.',
+    },
+
+    closureQuestion: 'La contrata ha formado al trabajador y ha enviado un correo confirmando que "han tomado nota". ¿Puede cerrarse el evento?',
+    closureOptions: [
+      { text: 'Sí — la contrata ha respondido y el trabajador está formado. El ciclo está completo.', correct: false,
+        feedback: 'Un correo de "hemos tomado nota" y una formación puntual no son suficientes para cerrar. Falta: verificación en campo de que el procedimiento se aplica correctamente, documentación del plan de acción con plazos y responsables, y confirmación de que las zonas sin protección han sido revisadas y corregidas si era necesario.' },
+      { text: 'No — el cierre requiere verificación en campo de que las condiciones y procedimientos han cambiado de forma real, no solo una confirmación escrita.', correct: true,
+        feedback: '✅ Correcto. El cierre válido requiere que alguien verifique en campo que las acciones se han ejecutado y que el riesgo está eliminado o controlado. Un correo es documentación, no verificación. La diferencia entre los dos es exactamente lo que separa un cierre real de un cierre prematuro.' },
+    ],
+  },
+
+  // ── EVENT 3: Riesgo de atrapamiento — alveolar de calcinación (SIP Cat.4) ──
+  {
+    num: 3,
+    badge: 'IF5',
+    origin: 'Planta SG · Grupo · Cat. 4',
+    isOwn: false,
+    title: 'Riesgo de atrapamiento en alveolar de calcinación — LOTO aplicado pero insuficiente',
+    scene: 'Un operario de la planta va a solucionar un atasco en el alveolar de calcinación 2. Aplica correctamente el procedimiento LOTO y abre la tapa. En ese momento observa que las palas del alveolar siguen moviéndose por inercia — la energía cinética residual no se había disipado. Al ir vaciando la zona atascada, existía riesgo real de atrapamiento.',
+    detail: 'Este es un SIP Cat. 4. El operario siguió el procedimiento establecido: el problema no estaba en su comportamiento sino en que el procedimiento LOTO no contemplaba la espera necesaria para la disipación de energía cinética antes de acceder al interior.',
+    priority: 'critical',
+    priorityFeedback: 'Correcto. Aunque el operario aplicó el LOTO, había un trabajador expuesto a riesgo de atrapamiento con energía residual activa. El riesgo de lesión grave o mortal es inminente — Prioridad Crítica. El hecho de que el procedimiento se siguiera correctamente no reduce la gravedad del riesgo.',
+    priorityWrongFeedback: 'Fíjate en lo que ocurre: el operario está dentro del equipo con las palas en movimiento. Aunque aplicó el LOTO, hay exposición directa a riesgo de atrapamiento grave. Eso es Prioridad Crítica — el procedimiento debe corregirse antes de que nadie vuelva a realizar esta tarea.',
+
+    responsible: 'ehs_maintenance',
+    responsibleOptions: [
+      { id:'worker_alone', label:'El operario que realizó la tarea, ya que no esperó a que el equipo se detuviera completamente.', correct: false, feedback:'El operario siguió el procedimiento establecido — la causa raíz no está en su comportamiento sino en que el procedimiento no contemplaba la energía cinética residual. Culpar al operario cuando el procedimiento es el que falla es exactamente el tipo de análisis incompleto que perpetúa los accidentes.' },
+      { id:'ehs_maintenance', label:'Equipo de Dirección de la fábrica + responsable de mantenimiento, para revisar y actualizar el procedimiento LOTO de este equipo.', correct: true, feedback:'Correcto. El equipo EHS lidera el análisis causal y el ciclo de mejora. El responsable de mantenimiento es clave porque conoce el comportamiento del equipo y debe validar el tiempo de disipación necesario. Juntos deben redefinir el procedimiento LOTO antes de que se realice esta tarea de nuevo.' },
+      { id:'ehs_only', label:'Equipo de Dirección de la fábrica, sin involucrar a mantenimiento ya que es un tema de procedimiento de seguridad.', correct: false, feedback:'El equipo EHS no puede revisar el procedimiento LOTO de este equipo sin el conocimiento técnico del área de mantenimiento. Saber cuánto tiempo tarda el alveolar en detenerse completamente es un dato técnico que solo mantenimiento puede aportar con precisión.' },
+    ],
+
+    actions: [
+      { id:'c1', text:'Paralizar esta tarea en todos los alveolares similares hasta que el procedimiento LOTO esté revisado y actualizado.', correct: true },
+      { id:'c2', text:'Revisar el procedimiento LOTO del alveolar para incluir un tiempo de espera mínimo verificable antes de acceder al interior.', correct: true },
+      { id:'c3', text:'Verificar si otros equipos de la planta con energía cinética residual tienen el mismo problema en su procedimiento LOTO.', correct: true },
+      { id:'c4', text:'Registrar el evento en el sistema EHS como IF5 SIP Cat. 4 con el estándar SG-LOTO.', correct: true },
+      { id:'c5', text:'Formar a todos los operarios que realizan esta tarea sobre el procedimiento LOTO actualizado antes de reanudar los trabajos.', correct: true },
+      { id:'c6', text:'Reforzar la formación general de LOTO al operario implicado, ya que no esperó a que el equipo se detuviera del todo.', correct: false },
+    ],
+    actionsFeedback: {
+      allCorrect: '✅ Selección excelente. La paralización inmediata protege a otros operarios que podrían realizar la misma tarea. La revisión del procedimiento con un tiempo de espera verificable es la acción sobre la causa raíz. Verificar otros equipos similares aplica el aprendizaje más allá del evento concreto — exactamente lo que hace útil un SIP.',
+      hasWrong: '⚠️ Reforzar la formación al operario implicado sería incorrecto: él siguió el procedimiento tal como estaba definido. La causa raíz es el procedimiento, no el comportamiento. Una formación sobre un procedimiento defectuoso no elimina el riesgo.',
+      missed: '⚠️ Hay acciones necesarias que no has marcado. Revísalas en amarillo.',
+    },
+
+    closureQuestion: 'El procedimiento LOTO ha sido revisado e incluye ahora un tiempo de espera de 3 minutos antes de acceder. El documento está actualizado y firmado por el responsable de mantenimiento. ¿Puede cerrarse el evento?',
+    closureOptions: [
+      { text: 'Sí — el procedimiento está actualizado y firmado. La causa raíz está corregida y el evento puede cerrarse.', correct: false,
+        feedback: 'El procedimiento actualizado es el paso más importante — pero no el último. Falta: formar a todos los operarios que realizan esta tarea sobre el nuevo procedimiento, verificar que la formación se ha completado, y comprobar que equipos similares también han sido revisados. Un procedimiento que nadie conoce todavía no protege a nadie.' },
+      { text: 'No todavía — falta formar a los operarios sobre el nuevo procedimiento y verificar que equipos similares han sido revisados antes del cierre.', correct: true,
+        feedback: '✅ Exacto. El cierre de un SIP Cat. 4 requiere que todas las acciones estén ejecutadas y verificadas: procedimiento actualizado, formación impartida y confirmada, y revisión de equipos similares completada. Solo entonces el ciclo está realmente cerrado.' },
+    ],
+  },
+
+  // ── EVENT 4: Barandilla inadecuada en pasarela — trabajos de mantenimiento ──
+  {
+    num: 4,
+    badge: 'IF5',
+    origin: 'Planta SG · Grupo',
+    isOwn: false,
+    title: 'Barandilla inadecuada en pasarela junto a zona de trabajos de mantenimiento',
+    scene: 'Durante trabajos de mantenimiento en la zona de Planta de Mezclas, un operario detecta que en una pasarela contigua a la zona de trabajo la barandilla existente no es suficiente para prevenir una caída al nivel inferior. La pasarela está en uso habitual y el riesgo de caída a distinto nivel existe tanto durante los trabajos actuales como en condiciones normales de operación.',
+    detail: 'La condición no fue creada por los trabajos de mantenimiento — la barandilla insuficiente es una condición preexistente que los trabajos pusieron en evidencia al aumentar la actividad en la zona.',
+    priority: 'high',
+    priorityFeedback: 'Correcto. La barandilla insuficiente es un riesgo de caída a distinto nivel real, pero en este momento no hay nadie en situación de caída inminente. Prioridad Alta: medida provisional inmediata (restringir el acceso o balizar) y solución estructural en menos de 7 días.',
+    priorityWrongFeedback: 'Este caso requiere distinguir entre riesgo presente y riesgo inminente. La barandilla insuficiente no puede esperar 30 días — por eso no es Media. Pero no hay nadie cayendo ahora mismo — por eso no es Crítica como el atrapamiento anterior. Prioridad Alta: medida provisional inmediata y solución estructural urgente.',
+
+    responsible: 'ehs_maintenance2',
+    responsibleOptions: [
+      { id:'ehs_maintenance2', label:'Equipo de Dirección de la fábrica + responsable de mantenimiento, para gestionar la medida provisional y la solución estructural.', correct: true, feedback:'Correcto. El equipo EHS registra el evento y lidera el análisis. El responsable de mantenimiento ejecuta la medida provisional (balizamiento o restricción de acceso) y planifica la solución estructural: instalación de una barandilla adecuada. Ambos son necesarios.' },
+      { id:'ops_manager', label:'Responsable de operaciones, ya que la pasarela está en zona de producción.', correct: false, feedback:'El responsable de operaciones debe ser informado y facilitará la restricción de uso, pero la gestión del ciclo de mejora para una condición estructural de seguridad recae en el equipo EHS y el responsable de mantenimiento.' },
+      { id:'ehs_alone2', label:'Equipo de Dirección de la fábrica exclusivamente, ya que es una condición de seguridad.', correct: false, feedback:'El equipo EHS no puede ejecutar la solución estructural (instalar la barandilla) sin mantenimiento. El ciclo requiere ambas partes: EHS para el análisis, el registro y el seguimiento; mantenimiento para la ejecución técnica.' },
+    ],
+
+    actions: [
+      { id:'d1', text:'Medida provisional inmediata: balizar la zona y restringir el uso de la pasarela hasta que la barandilla esté corregida.', correct: true },
+      { id:'d2', text:'Planificar la instalación de una barandilla que cumpla los requisitos reglamentarios de protección contra caídas.', correct: true },
+      { id:'d3', text:'Revisar si existen otras pasarelas o zonas de paso en la planta con condiciones similares de protección insuficiente.', correct: true },
+      { id:'d4', text:'Registrar el evento en el sistema EHS con el estándar SG- Lugares de trabajo y SG- Trabajos en altura.', correct: true },
+      { id:'d5', text:'Verificar, una vez instalada la barandilla, que cumple los requisitos antes de levantar la restricción de uso.', correct: true },
+      { id:'d6', text:'Señalizar la barandilla insuficiente con una cinta de advertencia y mantener la pasarela en uso normal — la señalización es suficiente como medida permanente.', correct: false },
+    ],
+    actionsFeedback: {
+      allCorrect: '✅ Muy bien. La restricción de uso inmediata protege mientras llega la solución. La barandilla reglamentaria es la acción sobre la causa raíz. Revisar otras zonas similares aplica el aprendizaje a toda la planta. Y verificar antes de levantar la restricción es lo que distingue un cierre real de uno prematuro.',
+      hasWrong: '⚠️ Una cinta de advertencia no es una medida permanente para un riesgo estructural de caída a distinto nivel — es una medida provisional mientras se instala la solución definitiva. Mantener la pasarela en uso con solo señalización equivale a aceptar el riesgo de forma indefinida.',
+      missed: '⚠️ Hay acciones necesarias que no has marcado. Revísalas en amarillo.',
+    },
+
+    closureQuestion: 'Se ha balizando la zona y restringido el uso de la pasarela. La instalación de la nueva barandilla está planificada para la próxima parada de mantenimiento, dentro de 3 semanas. ¿Puede cerrarse el evento ahora?',
+    closureOptions: [
+      { text: 'Sí — la medida provisional está activa y la solución definitiva está planificada. El ciclo de gestión está completo.', correct: false,
+        feedback: 'La medida provisional y la planificación son pasos necesarios pero no suficientes para el cierre. El evento solo puede cerrarse cuando la barandilla esté instalada y verificada en campo. Cerrar ahora es un cierre prematuro: si la parada se retrasa, nadie lo sabrá porque el evento ya está "cerrado".' },
+      { text: 'No — el evento debe permanecer abierto hasta que la barandilla esté instalada, verificada en campo y la restricción de uso levantada.', correct: true,
+        feedback: '✅ Correcto. Mantener el evento abierto garantiza que la solución no quede postergada. Un evento abierto genera seguimiento activo — un evento cerrado con la solución "planificada" puede desaparecer del radar. El cierre se produce cuando el riesgo ha sido eliminado, no cuando hay un plan para eliminarlo.' },
+    ],
+  },
+];
+
+// ── STATE ──────────────────────────────────────────────────────────────
+let current = 0;
+let scores  = []; // per event: { priority, responsible, actions, closure }
+let stepState = {}; // tracks which steps are done per event
+
+// ── RENDER ─────────────────────────────────────────────────────────────
+function render(idx) {
+  const ev = events[idx];
+  stepState = { priority: false, responsible: false, actions: false, closure: false };
+
+  const badgeClass = ev.badge === 'IF5' ? 'badge-if5' : 'badge-if4';
+  const originClass = ev.isOwn ? 'badge-soneja' : 'badge-sg';
+
+  const priGrid = PRIORITIES.map((p, i) => `
+    <button class="pri-btn" id="pri-${i}" onclick="answerPriority(${idx},'${p.id}')">
+      <div class="pri-dot" style="background:${p.dot.startsWith('#') ? p.dot : '#aaa'}"></div>
+      <div class="pri-name">${p.name}</div>
+      <div class="pri-desc">${p.desc}</div>
+    </button>`).join('');
+
+  const respOpts = ev.responsibleOptions.map((r, i) => `
+    <button class="opt-btn" id="resp-${i}" onclick="answerResponsible(${idx},'${r.id}')">
+      <span class="opt-label" style="background:#e0e8f0;color:#666">${String.fromCharCode(65+i)}</span>
+      <span>${r.label}</span>
+    </button>`).join('');
+
+  const actionChecks = ev.actions.map((a, i) => `
+    <label class="action-check" id="ac-${i}" onclick="toggleAction(${i},event)">
+      <input type="checkbox" id="achk-${i}" onchange="return false">
+      <label for="achk-${i}" style="pointer-events:none">${a.text}</label>
+    </label>`).join('');
+
+  const closureOpts = ev.closureOptions.map((c, i) => `
+    <button class="opt-btn" id="cl-${i}" onclick="answerClosure(${idx},${i})">
+      <span class="opt-label" style="background:#e0e8f0;color:#666">${i === 0 ? 'Sí' : 'No'}</span>
+      <span>${c.text}</span>
+    </button>`).join('');
+
+  document.getElementById('event-container').innerHTML = `
+    <div class="event-card">
+      <div class="event-num">Evento ${ev.num} de ${events.length}</div>
+      <div class="event-box ${ev.isOwn ? 'critical' : 'high'}">
+        <div class="event-label ${ev.isOwn ? 'critical' : 'high'}">📋 Situación detectada</div>
+        <div style="margin-bottom:8px">
+          <span class="event-badge ${badgeClass}">${ev.badge}</span>
+          <span class="event-badge ${originClass}">${ev.origin}</span>
+        </div>
+        <div class="event-text"><strong>${ev.title}</strong><br><br>${ev.scene}</div>
+        <div class="event-detail">${ev.detail}</div>
+      </div>
+
+      <!-- STEP 1: PRIORITY -->
+      <div class="step-section">
+        <div class="step-header">
+          <div class="step-num-circle" id="snum-1">1</div>
+          <div>
+            <div class="step-title">Asigna la prioridad</div>
+          </div>
+          <div class="step-subtitle">¿Qué nivel de urgencia tiene la respuesta?</div>
+        </div>
+        <div class="step-body">
+          <div class="priority-grid">${priGrid}</div>
+          <div id="pri-feedback" class="step-feedback"></div>
+        </div>
+      </div>
+
+      <!-- STEP 2: RESPONSIBLE -->
+      <div class="step-section">
+        <div class="step-header">
+          <div class="step-num-circle" id="snum-2">2</div>
+          <div><div class="step-title">¿Quién lidera el ciclo de mejora?</div></div>
+          <div class="step-subtitle">Responsable principal</div>
+        </div>
+        <div class="step-body" id="resp-body">
+          <div class="locked-msg" id="resp-locked">Se desbloqueará tras asignar la prioridad.</div>
+          <div id="resp-opts" style="display:none"><div class="options-list">${respOpts}</div></div>
+          <div id="resp-feedback" class="step-feedback"></div>
+        </div>
+      </div>
+
+      <!-- STEP 3: ACTIONS -->
+      <div class="step-section">
+        <div class="step-header">
+          <div class="step-num-circle" id="snum-3">3</div>
+          <div><div class="step-title">Selecciona las acciones correctivas</div></div>
+          <div class="step-subtitle">Marca todas las que apliquen</div>
+        </div>
+        <div class="step-body" id="actions-body">
+          <div class="locked-msg" id="actions-locked">Se desbloqueará tras identificar el responsable.</div>
+          <div id="actions-opts" style="display:none">
+            <p style="font-size:12px;color:#888;margin-bottom:12px;font-style:italic">Puedes seleccionar más de una. Cuando hayas marcado todas las que consideras correctas, pulsa Confirmar.</p>
+            ${actionChecks}
+            <button class="confirm-btn" id="confirm-actions" onclick="confirmActions(${idx})">Confirmar selección →</button>
+          </div>
+          <div id="actions-feedback" class="step-feedback"></div>
+        </div>
+      </div>
+
+      <!-- STEP 4: CLOSURE -->
+      <div class="step-section">
+        <div class="step-header">
+          <div class="step-num-circle" id="snum-4">4</div>
+          <div><div class="step-title">Decide sobre el cierre</div></div>
+          <div class="step-subtitle">¿Puede cerrarse el evento?</div>
+        </div>
+        <div class="step-body" id="closure-body">
+          <div class="locked-msg" id="closure-locked">Se desbloqueará tras confirmar las acciones.</div>
+          <div id="closure-opts" style="display:none">
+            <div style="background:#fff8e1;border:1px solid #ffe082;border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:#5c4000;line-height:1.6;">
+              <strong>Situación actual:</strong> ${ev.closureQuestion}
+            </div>
+            <div class="options-list">${closureOpts}</div>
+          </div>
+          <div id="closure-feedback" class="step-feedback"></div>
+        </div>
+      </div>
+    </div>`;
+
+  document.getElementById('progress-label').textContent = `Evento ${idx + 1} de ${events.length}`;
+  scores[idx] = { priority: null, responsible: null, actions: null, closure: null };
+}
+
+// ── TOGGLE ACTION CHECKBOX ─────────────────────────────────────────────
+function toggleAction(i, e) {
+  e.preventDefault();
+  const chk = document.getElementById('achk-' + i);
+  const lbl = document.getElementById('ac-' + i);
+  if (chk.disabled) return;
+  chk.checked = !chk.checked;
+  lbl.classList.toggle('selected', chk.checked);
+}
+
+// ── STEP 1: PRIORITY ───────────────────────────────────────────────────
+function answerPriority(idx, priId) {
+  const ev = events[idx];
+  const isCorrect = priId === ev.priority;
+  const correctI  = PRIORITIES.findIndex(p => p.id === ev.priority);
+  const chosenI   = PRIORITIES.findIndex(p => p.id === priId);
+
+  PRIORITIES.forEach((_,i) => { const b = document.getElementById('pri-'+i); if(b) b.disabled = true; });
+
+  if (isCorrect) {
+    playCorrect();
+    document.getElementById('pri-'+correctI).className = 'pri-btn selected-correct';
+    showFeedback('pri-feedback', 'correct', '✅ ' + ev.priorityFeedback);
+    scores[idx].priority = true;
+  } else {
+    playWrong();
+    document.getElementById('pri-'+chosenI).className = 'pri-btn selected-wrong';
+    document.getElementById('pri-'+correctI).className = 'pri-btn revealed';
+    showFeedback('pri-feedback', 'wrong', '⚠️ ' + ev.priorityWrongFeedback);
+    scores[idx].priority = false;
+  }
+  stepState.priority = true;
+  document.getElementById('snum-1').classList.add('done');
+  setTimeout(() => unlockStep('resp'), 1800);
+}
+
+// ── STEP 2: RESPONSIBLE ────────────────────────────────────────────────
+function unlockStep(step) {
+  if (step === 'resp') {
+    document.getElementById('resp-locked').style.display = 'none';
+    document.getElementById('resp-opts').style.display   = 'block';
+    document.getElementById('resp-opts').scrollIntoView({ behavior:'smooth', block:'nearest' });
+  } else if (step === 'actions') {
+    document.getElementById('actions-locked').style.display = 'none';
+    document.getElementById('actions-opts').style.display   = 'block';
+    document.getElementById('actions-opts').scrollIntoView({ behavior:'smooth', block:'nearest' });
+  } else if (step === 'closure') {
+    document.getElementById('closure-locked').style.display = 'none';
+    document.getElementById('closure-opts').style.display   = 'block';
+    document.getElementById('closure-opts').scrollIntoView({ behavior:'smooth', block:'nearest' });
+  }
+}
+
+function answerResponsible(idx, respId) {
+  const ev = events[idx];
+  const isCorrect = respId === ev.responsible;
+  const opts = ev.responsibleOptions;
+  const correctI  = opts.findIndex(r => r.id === ev.responsible);
+  const chosenI   = opts.findIndex(r => r.id === respId);
+
+  opts.forEach((_,i) => { const b = document.getElementById('resp-'+i); if(b) b.disabled = true; });
+
+  const chosenOpt = opts[chosenI];
+
+  if (isCorrect) {
+    playCorrect();
+    document.getElementById('resp-'+correctI).className = 'opt-btn selected-correct';
+    showFeedback('resp-feedback', 'correct', '✅ ' + chosenOpt.feedback);
+    scores[idx].responsible = true;
+  } else {
+    playWrong();
+    document.getElementById('resp-'+chosenI).className = 'opt-btn selected-wrong';
+    document.getElementById('resp-'+correctI).className = 'opt-btn revealed';
+    showFeedback('resp-feedback', 'wrong', '⚠️ ' + chosenOpt.feedback);
+    scores[idx].responsible = false;
+  }
+  stepState.responsible = true;
+  document.getElementById('snum-2').classList.add('done');
+  setTimeout(() => unlockStep('actions'), 1800);
+}
+
+// ── STEP 3: ACTIONS ────────────────────────────────────────────────────
+function confirmActions(idx) {
+  const ev = events[idx];
+  const selected = ev.actions.map((_,i) => document.getElementById('achk-'+i)?.checked || false);
+
+  ev.actions.forEach((_,i) => {
+    const lbl = document.getElementById('ac-'+i);
+    const chk = document.getElementById('achk-'+i);
+    if (chk) chk.disabled = true;
+    if (!lbl) return;
+  });
+  document.getElementById('confirm-actions').disabled = true;
+
+  const correctIdx  = ev.actions.map((a,i) => a.correct ? i : -1).filter(i => i >= 0);
+  const incorrectIdx= ev.actions.map((a,i) => !a.correct ? i : -1).filter(i => i >= 0);
+  const selectedWrong  = incorrectIdx.filter(i => selected[i]);
+  const missedCorrect  = correctIdx.filter(i => !selected[i]);
+  const hitCorrect     = correctIdx.filter(i => selected[i]);
+
+  ev.actions.forEach((a,i) => {
+    const lbl = document.getElementById('ac-'+i);
+    if (!lbl) return;
+    if (a.correct && selected[i])  { lbl.className = 'action-check correct-action'; }
+    else if (!a.correct && selected[i]) { lbl.className = 'action-check wrong-action'; }
+    else if (a.correct && !selected[i]) { lbl.className = 'action-check missed-action'; }
+    else { lbl.className = 'action-check'; }
+  });
+
+  const allPerfect = selectedWrong.length === 0 && missedCorrect.length === 0;
+  const hasWrong   = selectedWrong.length > 0;
+
+  if (allPerfect) {
+    playCorrect();
+    showFeedback('actions-feedback', 'correct', ev.actionsFeedback.allCorrect);
+    scores[idx].actions = 'full';
+  } else if (hasWrong) {
+    playWrong();
+    showFeedback('actions-feedback', 'wrong', ev.actionsFeedback.hasWrong);
+    scores[idx].actions = 'partial';
+  } else {
+    playWrong();
+    showFeedback('actions-feedback', 'wrong', `⚠️ Has evitado las acciones incorrectas, pero has dejado sin marcar ${missedCorrect.length === 1 ? 'una acción necesaria' : 'algunas acciones necesarias'} (marcadas en amarillo). ${ev.actionsFeedback.missed || ''}`);
+    scores[idx].actions = 'partial';
+  }
+  stepState.actions = true;
+  document.getElementById('snum-3').classList.add('done');
+  setTimeout(() => unlockStep('closure'), allPerfect ? 1800 : 2600);
+}
+
+// ── STEP 4: CLOSURE ────────────────────────────────────────────────────
+function answerClosure(idx, optIdx) {
+  const ev = events[idx];
+  const opt = ev.closureOptions[optIdx];
+  const isCorrect = opt.correct;
+
+  ev.closureOptions.forEach((_,i) => { const b = document.getElementById('cl-'+i); if(b) b.disabled = true; });
+
+  if (isCorrect) {
+    playCorrect();
+    document.getElementById('cl-'+optIdx).className = 'opt-btn selected-correct';
+    showFeedback('closure-feedback', 'correct', opt.feedback);
+    scores[idx].closure = true;
+  } else {
+    playWrong();
+    document.getElementById('cl-'+optIdx).className = 'opt-btn selected-wrong';
+    const correctI = ev.closureOptions.findIndex(c => c.correct);
+    document.getElementById('cl-'+correctI).className = 'opt-btn revealed';
+    showFeedback('closure-feedback', 'wrong', opt.feedback);
+    scores[idx].closure = false;
+  }
+  stepState.closure = true;
+  document.getElementById('snum-4').classList.add('done');
+
+  // Update progress dot
+  const dot = document.getElementById('dot-' + (idx + 1));
+  const allGood = scores[idx].priority && scores[idx].responsible && scores[idx].actions === 'full' && scores[idx].closure;
+  dot.classList.remove('current');
+  dot.classList.add(allGood ? 'done' : 'partial');
+
+  const delay = isCorrect ? 5000 : 6000;
+  setTimeout(() => {
+    if (idx < events.length - 1) {
+      current = idx + 1;
+      render(current);
+      const nextDot = document.getElementById('dot-' + (current + 1));
+      if (nextDot) nextDot.classList.add('current');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      showFinal();
+    }
+  }, delay);
+}
+
+// ── HELPERS ────────────────────────────────────────────────────────────
+function showFeedback(id, type, text) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.className = `step-feedback show ${type}`;
+  el.innerHTML = text;
+}
+
+// ── FINAL ──────────────────────────────────────────────────────────────
+function showFinal() {
+  document.getElementById('event-container').style.display = 'none';
+
+  let totalPoints = 0, maxPoints = events.length * 4;
+  const pips = events.map((_,i) => {
+    const s = scores[i];
+    let pts = 0;
+    if (s.priority) pts++;
+    if (s.responsible) pts++;
+    if (s.actions === 'full') pts++;
+    if (s.closure) pts++;
+    totalPoints += pts;
+    const cls = pts === 4 ? 'full' : pts >= 2 ? 'partial' : 'empty';
+    return `<div class="summary-pip ${cls}"></div>`;
+  }).join('');
+
+  const pct = Math.round(totalPoints / maxPoints * 100);
+  let icon, msg;
+  if (pct >= 85) {
+    icon = '🏆';
+    msg = 'Dominas el ciclo de mejora. Identificas correctamente prioridades, responsables, acciones y sabes distinguir un cierre real de uno prematuro. Esa capacidad es exactamente lo que el sistema de gestión de eventos necesita para funcionar.';
+  } else if (pct >= 60) {
+    icon = '✅';
+    msg = 'Buena base. Los puntos donde dudaste suelen ser la priorización y el cierre — las dos decisiones más difíciles del ciclo. Repasa los criterios de prioridad y los requisitos de cierre de la sección 4 del módulo.';
+  } else {
+    icon = '📖';
+    msg = 'El ciclo de mejora tiene muchas piezas. Antes de continuar al Módulo 6, vuelve a revisar las secciones 1, 2 y 4 del módulo — especialmente los criterios de priorización y cierre. La práctica con casos reales es exactamente para eso.';
+  }
+
+  const fc = document.getElementById('final-card');
+  fc.classList.add('show');
+  fc.innerHTML = `
+    <div class="final-icon">${icon}</div>
+    <div class="final-score">${totalPoints}/${maxPoints}</div>
+    <div class="final-label">${pct}% · 4 eventos gestionados</div>
+    <div class="summary-strip">${pips}</div>
+    <div class="final-msg">${msg}</div>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <button class="btn btn-outline-white" onclick="restart()">↺ Repetir la actividad</button>
+    </div>`;
+
+  
+  if (pct >= 70) {
+    const codeBox = document.createElement('div');
+    codeBox.style.marginTop = '24px';
+    codeBox.style.padding = '18px';
+    codeBox.style.background = '#E8F7F4';
+    codeBox.style.borderLeft = '4px solid #4DB8A4';
+    codeBox.style.borderRadius = '10px';
+    codeBox.style.fontSize = '14px';
+    codeBox.style.fontWeight = '600';
+    codeBox.style.textAlign = 'center';
+    codeBox.innerHTML = 'Código de acceso para continuar:<br><span style="font-size:22px;font-weight:800;color:#1B2A4A;letter-spacing:2px;">M5A1-K9T4</span>';
+    fc.appendChild(codeBox);
+  }
+
+  playCelebrate();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function restart() {
+  current = 0; scores = [];
+  document.getElementById('final-card').classList.remove('show');
+  document.getElementById('event-container').style.display = 'block';
+  document.querySelectorAll('.dot').forEach((d, i) => {
+    d.className = 'dot' + (i === 0 ? ' current' : '');
+  });
+  render(0);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── START ──────────────────────────────────────────────────────────────
+render(0);
+</script>
+</body>
+</html>
